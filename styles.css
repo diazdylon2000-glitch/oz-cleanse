@@ -1,149 +1,170 @@
-/* Reset + Base */
-* {
+/* General page layout */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #fff6f2;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #fdf8fb;
+  text-align: center;
   color: #333;
-  padding-bottom: 90px; /* space for floating dock */
 }
 
-/* Top Bar */
-.top-bar {
+/* Header / top bar */
+.header {
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 12px;
-  background: #ffe4ef;
-  border-bottom: 2px solid #f3d0e1;
+  justify-content: center;
+  padding: 10px;
+  background-color: #fff;
+  border-bottom: 1px solid #f0d5d0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+}
+
+.header img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
 }
 
 .day-selector {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .day-selector button {
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-}
-
-#currentDay {
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-
-/* Cards */
-section {
-  margin: 16px;
-  padding: 14px;
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-/* Smart Coach */
-.coach-card {
-  border: 1px solid #f3d0e1;
-  background: linear-gradient(90deg, #ffe4ef, #e9d5ff);
-  border-radius: 14px;
-  padding: 12px;
-  cursor: pointer;
-}
-
-.coach-header {
-  font-weight: bold;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.coach-instructions {
-  font-size: 0.8rem;
-  color: #555;
-  margin-top: 4px;
-}
-
-/* Notes */
-#dailyNotes {
-  width: 100%;
-  min-height: 100px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  padding: 10px;
-  resize: vertical;
-}
-
-/* Paw Print Checklist */
-.checklist {
-  list-style: none;
-}
-
-.checklist li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.checklist input[type="checkbox"] {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: url('paw-print.svg') center/cover no-repeat;
+  background: none;
   border: none;
+  font-size: 20px;
   cursor: pointer;
 }
 
-.checklist input[type="checkbox"]:checked {
-  filter: brightness(0.6);
+/* Habit list */
+.habit-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
 }
 
-/* Floating Dock */
+.habit-list li {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #f3e0dc;
+}
+
+.habit-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #f3a38c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-size: 14px;
+  background-color: white;
+}
+
+.habit-check.checked {
+  background-color: #f3a38c;
+  color: white;
+}
+
+/* Smart Coach box */
+.smart-coach {
+  background: linear-gradient(to right, #ffd1dc, #e0c3fc);
+  padding: 12px;
+  border-radius: 10px;
+  margin: 20px auto;
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.smart-coach-title {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.smart-coach-title span {
+  margin-left: 5px;
+}
+
+.smart-coach p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #444;
+}
+
+/* Notes box */
+.notes-box {
+  width: 90%;
+  max-width: 400px;
+  min-height: 80px;
+  margin: 10px auto;
+  padding: 8px;
+  border: 2px solid #f3a38c;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Floating dock menu */
 .floating-dock {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #ffe4ef;
-  border-radius: 50px;
-  padding: 8px 14px;
+  background: white;
   display: flex;
-  gap: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 200;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  width: auto;
+  z-index: 1000;
 }
 
 .floating-dock button {
-  background: #fff;
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 1.4rem;
+  font-size: 22px;
+  padding: 6px;
   cursor: pointer;
-  transition: transform 0.15s ease;
 }
 
-.floating-dock button:hover {
-  transform: scale(1.1);
+.floating-dock button.active {
+  background-color: #f3a38c;
+  border-radius: 50%;
+  color: white;
+}
+
+/* Loading screen */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.loading-screen img {
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+}
+
+.loading-screen p {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #f3a38c;
 }
