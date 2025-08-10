@@ -1,66 +1,149 @@
-/* ==== Floating Dock ==== */
-.navDock {
-  position: fixed;
-  left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-  transform: translateX(-50%);
-  z-index: 9999;
+/* Reset + Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #fdf8fb;
+  color: #333;
+  padding-bottom: 90px; /* space for floating dock */
+}
+
+/* Top Bar */
+.top-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  background: #ffe4ef;
+  border-bottom: 2px solid #f3d0e1;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.day-selector {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-
-  width: min(760px, 92vw);
-  padding: 10px;
-  border-radius: 18px;
-
-  background: rgba(255, 247, 241, 0.85);            /* soft peach glass */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid #f3d0e1;
-  box-shadow: 0 12px 34px rgba(236, 72, 153, .12);
 }
 
-/* Dock buttons */
-.navDock .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-
-  min-width: 86px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  text-decoration: none;
-  font-size: 15px;
-  line-height: 1;
-  border: 1px solid #f3d0e1;
+.day-selector button {
   background: #fff;
-  color: #2563eb;           /* iOS link blue */
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
 }
 
-.navDock .btn:active { transform: translateY(1px); }
-.navDock .btn.active {
-  background: #0f172a;      /* ink */
-  border-color: #0f172a;
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, .25);
+#currentDay {
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
-/* Reserve space so dock never overlaps content */
-.navDock-spacer { height: 82px; }  /* ~dock height */
-@supports (padding: max(0px)) {
-  .navDock-spacer { height: max(82px, calc(70px + env(safe-area-inset-bottom, 0px))); }
+/* Cards */
+section {
+  margin: 16px;
+  padding: 14px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
-/* Small phones: tighter pills */
-@media (max-width: 380px) {
-  .navDock .btn { min-width: 72px; font-size: 14px; padding: 9px 12px; }
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
 }
 
-/* When printing or landscape tablet, hide it */
-@media print {
-  .navDock, .navDock-spacer { display: none !important; }
+/* Smart Coach */
+.coach-card {
+  border: 1px solid #f3d0e1;
+  background: linear-gradient(90deg, #ffe4ef, #e9d5ff);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.coach-header {
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coach-instructions {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 4px;
+}
+
+/* Notes */
+#dailyNotes {
+  width: 100%;
+  min-height: 100px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  resize: vertical;
+}
+
+/* Paw Print Checklist */
+.checklist {
+  list-style: none;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.checklist input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: url('paw-print.svg') center/cover no-repeat;
+  border: none;
+  cursor: pointer;
+}
+
+.checklist input[type="checkbox"]:checked {
+  filter: brightness(0.6);
+}
+
+/* Floating Dock */
+.floating-dock {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffe4ef;
+  border-radius: 50px;
+  padding: 8px 14px;
+  display: flex;
+  gap: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 200;
+}
+
+.floating-dock button {
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.floating-dock button:hover {
+  transform: scale(1.1);
 }
