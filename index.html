@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Oz Companion</title>
+  <meta name="theme-color" content="#f9c2a7"/>
+
+  <!-- Styles (added in the next step) -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- React + Chart.js + Confetti (with fallbacks) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin
+          onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin
+          onerror="this.onerror=null;this.src='https://unpkg.com/canvas-confetti@1.6.0/dist/confetti.browser.min.js'"></script>
+</head>
+
+<body>
+  <!-- Error banner (shows JS errors in plain English) -->
+  <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:10px;font-size:14px;z-index:10000;text-align:center"></div>
+
+  <!-- Splash (optional oz.png in the same folder) -->
+  <div id="ozSplash" class="splash"><img id="ozImg" alt="Oz" src="oz.png"/></div>
+  <div id="ozBubble" class="bubble">Hydration is happiness 🐾</div>
+
+  <!-- React root -->
+  <div id="root"></div>
+
+  <!-- Plan + defaults (next file will define window.OZ_DATA, prices, etc.) -->
+  <script src="data.js"></script>
+
+  <!-- App code (final file; mounts React app) -->
+  <script src="app.js"></script>
+
+  <!-- Tiny inline helpers: splash and global error capture -->
+  <script>
+    (function(){
+      // Random splash line
+      var lines=[
+        "You’ve got this!","Small habits, big change","Progress, not perfection",
+        "Sip, breathe, reset","Strong body, calm mind","Hydration is happiness 🐾",
+        "Future-you says thanks","Gentle + consistent + kind","Shine time ✨","You’re doing the work 💪"
+      ];
+      var b=document.getElementById("ozBubble");
+      if(b) b.textContent=lines[Math.floor(Math.random()*lines.length)];
+      window.addEventListener("load",function(){
+        setTimeout(function(){
+          var s=document.getElementById("ozSplash"), bb=document.getElementById("ozBubble");
+          if(s) s.classList.add("fadeOut"); if(bb) bb.classList.add("fadeOut");
+          setTimeout(function(){ if(s) s.style.display="none"; if(bb) bb.style.display="none"; }, 620);
+        }, 1100);
+      });
+
+      // Show friendly error banner
+      window.addEventListener('error',function(e){
+        var el=document.getElementById('errorBanner'); if(!el) return;
+        el.textContent='Error: '+(e.error&&e.error.message?e.error.message:e.message);
+        el.style.display='block';
+      });
+
+      // CDN sanity check
+      function banner(msg){
+        var el=document.getElementById('errorBanner'); if(!el) return;
+        el.textContent = msg; el.style.display = 'block';
+      }
+      var issues=[];
+      if(!window.React) issues.push("React");
+      if(!window.ReactDOM) issues.push("ReactDOM");
+      if(!window.Chart) issues.push("Chart.js");
+      if(issues.length){ banner("CDN failed: "+issues.join(", ")+". Reload or try another network."); }
+
+      // Safe confetti
+      window.safeConfetti=function(opts){ try{ if(window.confetti) window.confetti(opts); }catch(e){} };
+    })();
+  </script>
+</body>
+</html>
