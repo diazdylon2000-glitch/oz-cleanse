@@ -1,119 +1,66 @@
-/* ========== Theme tokens ========== */
-:root{
-  --peach:#ffb08f; --peach-200:#ffd8c8; --peach-100:#fff1ea;
-  --rose:#ec4899; --ink:#0f172a; --sub:#64748b; --line:#f3d0e1;
-  --cream:#fff7f1; --card:#ffffff;
-  --shadow:0 10px 30px rgba(236,72,153,.10);
+/* ==== Floating Dock ==== */
+.navDock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: min(760px, 92vw);
+  padding: 10px;
+  border-radius: 18px;
+
+  background: rgba(255, 247, 241, 0.85);            /* soft peach glass */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #f3d0e1;
+  box-shadow: 0 12px 34px rgba(236, 72, 153, .12);
 }
 
-/* ========== Base ========== */
-*{box-sizing:border-box}
-html,body{margin:0}
-html,body{
-  background:var(--cream);
-  color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+/* Dock buttons */
+.navDock .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+
+  min-width: 86px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1;
+  border: 1px solid #f3d0e1;
+  background: #fff;
+  color: #2563eb;           /* iOS link blue */
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
-body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-h1,h2{margin:0 0 10px}
-small,.sub{color:var(--sub)}
-.wrap{max-width:940px;margin:16px auto 112px;padding:0 16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
-.badge{display:inline-block;padding:2px 10px;border:1px solid #e7ccd7;background:#fff;border-radius:9999px;font-size:12px}
 
-#errorBanner{display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:10px;font-size:14px;z-index:10000;text-align:center}
-
-/* ========== Splash ========== */
-.splash{position:fixed;inset:0;background:#fef3ec;display:flex;align-items:center;justify-content:center;z-index:80}
-.splash img{width:170px;height:170px;border-radius:9999px;object-fit:cover;border:6px solid #fff;box-shadow:0 24px 60px rgba(149,92,51,.25)}
-.bubble{
-  position:fixed;left:50%;top:62%;transform:translate(-50%,-10px);
-  max-width:min(90vw,360px);z-index:81;background:#fff;border:2px solid var(--line);
-  border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.25;
-  box-shadow:0 10px 32px rgba(236,72,153,.15); text-align:center;
+.navDock .btn:active { transform: translateY(1px); }
+.navDock .btn.active {
+  background: #0f172a;      /* ink */
+  border-color: #0f172a;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .25);
 }
-.fadeOut{animation:fadeOut .6s ease forwards}
-@keyframes fadeOut{to{opacity:0;visibility:hidden}}
 
-/* ========== Masthead (top bar) ========== */
-.mast{position:relative;border:1px solid var(--line);border-radius:16px;padding:12px;background:linear-gradient(90deg,#fff7f1,#ffe9e0)}
-.mastRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.mastLeft{display:flex;align-items:center;gap:12px}
-.mastLeft img{height:42px;width:42px;border-radius:9999px;object-fit:cover;border:2px solid #fff}
-.mastTitle{display:flex;flex-direction:column}
-.mastTitle .name{font-size:24px;font-weight:800;letter-spacing:.2px;line-height:1}
-.mastTitle .phase{margin-top:4px;color:#64748b;font-weight:700;font-size:12px;letter-spacing:.6px}
-
-.day-nav{display:flex;align-items:center;gap:8px}
-.day-btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;cursor:pointer}
-.day-label{font-weight:700;border:1px solid var(--line);background:#fff;border-radius:9999px;padding:6px 12px;font-size:14px}
-
-/* ========== Progress bar ========== */
-.prog{height:10px;border-radius:9999px;background:#f1f2f4;overflow:hidden;margin-top:12px}
-.fill{height:100%;background:linear-gradient(90deg,#ffa56e,#ec4899);width:0;transition:width .35s cubic-bezier(.22,.61,.36,1)}
-@media (prefers-reduced-motion:reduce){ .fill{transition:none} }
-
-/* ========== Checklist (paw toggles) ========== */
-.list{list-style:none;padding:0;margin:0}
-.item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
-.item:last-child{border-bottom:0}
-.paw{display:inline-flex;align-items:center;justify-content:center;height:36px;width:36px;border-radius:9999px;border:1px solid #f0cbb0;background:#fff;transition:transform .12s, background .2s;cursor:pointer}
-.paw::before{content:"";width:18px;height:18px;mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill=\'%23f0b58d\' d=\'M12 13c2.8 0 5 2 5 4.5S14.8 22 12 22s-5-2-5-4.5S9.2 13 12 13Zm-6.8-1.2c-1 0-1.9-.9-1.9-2s.9-2 1.9-2 2 .9 2 2-.9 2-2 2Zm13.6 0c-1 0-2-.9-2-2s1-2 2-2 1.9.9 1.9 2-.9 2-1.9 2ZM8.5 8.7c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Zm7 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z'/></svg>') center/contain no-repeat;background:#f0b58d}
-.paw.on{background:linear-gradient(90deg,#f9d49a,#ffd2c8);transform:scale(1.02)}
-.paw.on::before{background:#a96f3c}
-.item label{font-size:18px;font-weight:700;color:#0f172a}
-
-/* ========== Smart Coach (integrated tile) ========== */
-.coachTile{
-  display:flex;align-items:center;gap:14px;
-  background:linear-gradient(90deg,#ffe4ef,#e9d5ff);
-  border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;
+/* Reserve space so dock never overlaps content */
+.navDock-spacer { height: 82px; }  /* ~dock height */
+@supports (padding: max(0px)) {
+  .navDock-spacer { height: max(82px, calc(70px + env(safe-area-inset-bottom, 0px))); }
 }
-.coachMark{
-  background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
-  font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px;
+
+/* Small phones: tighter pills */
+@media (max-width: 380px) {
+  .navDock .btn { min-width: 72px; font-size: 14px; padding: 9px 12px; }
 }
-.coachCopy{display:flex;flex-direction:column;gap:2px}
-.coachTitle{font-weight:700;letter-spacing:.2px}
-.coachHint{font-size:13px;color:#475569}
 
-.noteArea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:16px}
-.coachOut{white-space:pre-wrap;border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;background-image:linear-gradient(180deg,rgba(255,228,239,.55),rgba(233,213,255,.35))}
-
-/* ========== Chart wrapper (so axes never get clipped) ========== */
-.chartWrap{height:180px}
-.chartWrap canvas{display:block}
-
-/* ========== Nav: Sticky or Floating Dock ========== */
-/* Shared look */
-.navDock, .navSticky{
-  z-index:60; display:flex; gap:10px; justify-content:center; align-items:center;
-  padding:10px; margin:12px auto; max-width:920px;
+/* When printing or landscape tablet, hide it */
+@media print {
+  .navDock, .navDock-spacer { display: none !important; }
 }
-.navDock .btn, .navSticky .btn{
-  border:1px solid var(--line); background:#fff; padding:12px 18px; border-radius:14px;
-  font-weight:600; min-width:120px; text-align:center;
-}
-.navDock .btn.active, .navSticky .btn.active{ background:#0f172a; color:#fff; border-color:#0f172a }
-
-/* 1) Sticky bar (under masthead) */
-.navSticky{ position:sticky; top:0; background:linear-gradient(#fff7f1aa,#fff7f1aa); backdrop-filter:blur(8px) }
-
-/* 2) Floating dock (always visible, centered, non-overflowing) */
-.navDock{
-  position:fixed; left:50%; transform:translateX(-50%);
-  bottom:calc(env(safe-area-inset-bottom) + 12px);
-  width:min(92vw, 880px);
-  background:rgba(255,247,241,.85); backdrop-filter:blur(10px);
-  border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 30px rgba(16,24,40,.15); padding:12px;
-}
-/* Prevent overlap with iOS keyboard */
-body.keyboard .navDock{ transform:translate(-50%, 90px); opacity:.001; pointer-events:none }
-/* Give page bottom breathing room when dock is used */
-body.hasDock{ padding-bottom:96px }
-
-/* ========== Utility ========== */
-.center{display:flex;justify-content:center;align-items:center}
-.hidden{display:none!important}
