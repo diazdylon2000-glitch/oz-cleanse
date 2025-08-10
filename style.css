@@ -99,3 +99,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:calc(72px + env(safe-ar
 .chartWrap{height:180px}
 
 @media (prefers-reduced-motion:reduce){ .fill{transition:none} }
+
+/* support both fadeOut and fade-out */
+.fadeOut, .fade-out { animation: splashFade .6s ease forwards; }
+@keyframes splashFade { to { opacity: 0; visibility: hidden; } }
