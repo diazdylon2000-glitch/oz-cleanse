@@ -157,3 +157,9 @@ textarea {
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
+/* Prevent iOS zoom on number inputs (weight field) */
+input[type="number"] { font-size: 16px; }
+
+/* Make sure the splash/bubble look right */
+.splash { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background:#fef8f1; z-index: 80; }
+.bubble { position: fixed; left:50%; top:54%; transform: translateX(90px); background:#fff; border:2px solid #f3d0e1; border-radius:16px; padding:10px 12px; z-index:81; }
