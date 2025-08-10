@@ -11,38 +11,28 @@
 (function () {
   "use strict";
 
-  /* -------- Splash / Loader -------- */
-  (function () {
-    var lines = [
-      "You’ve got this!", "Small habits, big change", "Progress, not perfection",
-      "Sip, breathe, reset", "Strong body, calm mind", "Hydration is happiness 🐾",
-      "Future-you says thanks", "Gentle + consistent + kind", "Shine time ✨",
-      "Keep it playful", "You’re doing the work 💪"
-    ];
-    var bubble = document.getElementById("ozBubble");
-    if (bubble) bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+  // --- Splash: set friendly line + fade out ---
+(function () {
+  var lines = [
+    "Hydration is happiness 🐾",
+    "Small habits, big change",
+    "Progress, not perfection",
+    "Sip, breathe, reset",
+    "Strong body, calm mind"
+  ];
+  var bubble = document.getElementById("ozBubble");
+  if (bubble) bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
 
-    window.addEventListener("load", function () {
+  window.addEventListener("load", function () {
+    setTimeout(function () {
       var splash = document.getElementById("ozSplash");
-      var note = document.getElementById("ozBubble");
+      if (splash) splash.classList.add("hide");
       setTimeout(function () {
         if (splash) splash.style.display = "none";
-        if (note) note.style.display = "none";
-      }, 1200);
-    });
-
-    window.addEventListener("error", function (ev) {
-      var el = document.getElementById("errorBanner");
-      if (!el) return;
-      var msg = ev.error && ev.error.message ? ev.error.message : ev.message;
-      el.textContent = "Error: " + msg;
-      el.style.display = "block";
-      var splash = document.getElementById("ozSplash");
-      var note = document.getElementById("ozBubble");
-      if (splash) splash.style.display = "none";
-      if (note) note.style.display = "none";
-    });
-  })();
+      }, 380);
+    }, 1100);
+  });
+})();
 
   /* -------- React helpers -------- */
   var e = React.createElement;
