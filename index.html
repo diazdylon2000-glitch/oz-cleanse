@@ -1,75 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Oz Companion</title>
-  <meta name="theme-color" content="#f9c2a7" />
-
-  <!-- Favicons (optional) -->
-  <link rel="icon" href="oz.png" type="image/png" />
-
-  <!-- App CSS -->
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- React + Chart.js + Confetti (with simple fallbacks) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin
-          onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://unpkg.com/canvas-confetti@1.6.0/dist/confetti.browser.min.js'"></script>
-
-  <style>
-    /* Minimal critical CSS so splash looks right even before styles.css loads */
-    :root { --line:#f3d0e1; }
-    html,body { margin:0; background:#fff7f1; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#0f172a }
-    #errorBanner{display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:10px;font-size:14px;z-index:10000;text-align:center}
-    .splash{position:fixed;inset:0;background:#fef3ec;display:flex;align-items:center;justify-content:center;z-index:80}
-    .splash img{width:170px;height:170px;border-radius:9999px;object-fit:cover;border:6px solid #fff;box-shadow:0 24px 60px rgba(149,92,51,.25)}
-    .bubble{position:fixed;left:50%;top:62%;transform:translate(-50%,-10px);max-width:min(90vw,360px);z-index:81;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.25;box-shadow:0 10px 32px rgba(236,72,153,.15)}
-    @media (min-width:600px){ .bubble{ left:50%; top:54%; transform:translateX(92px) } }
-    .fade-out{animation:ozfade .6s ease forwards}
-    @keyframes ozfade{to{opacity:0;visibility:hidden}}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oz Cleanse Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="errorBanner"></div>
-
-  <!-- Splash / Loader -->
-  <div id="ozSplash" class="splash" aria-hidden="true">
-    <img id="ozImg" alt="Oz" src="oz.png" />
-  </div>
-  <div id="ozBubble" class="bubble">Hydration is happiness 🐾</div>
-
-  <!-- React root -->
-  <div id="root"></div>
-
-  <noscript>
-    <div style="padding:16px;background:#fee2e2;color:#7f1d1d">
-      Oz Companion needs JavaScript enabled.
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="day-selector">
+      <button id="prevDayBtn">⟨</button>
+      <span id="currentDay"></span>
+      <button id="nextDayBtn">⟩</button>
     </div>
-  </noscript>
+  </header>
 
-  <!-- App JS (bundles the restored UI, Smart Coach, charts, groceries, etc.) -->
-  <script defer src="app.js"></script>
+  <!-- Main Content -->
+  <main>
+    <!-- Smart Coach -->
+    <section class="coach-card" role="button" tabindex="0" id="runCoach">
+      <div class="coach-header">
+        🧠 Smart Coach
+      </div>
+      <p class="coach-instructions">
+        Tap here for personalized tips and guidance.
+      </p>
+    </section>
 
-  <script>
-    // Tiny runtime health check for CDNs
-    (function(){
-      var issues=[];
-      if(!window.React) issues.push("React");
-      if(!window.ReactDOM) issues.push("ReactDOM");
-      if(!window.Chart) issues.push("Chart.js");
-      if(issues.length){
-        var el=document.getElementById('errorBanner');
-        if(el){ el.textContent="CDN failed: "+issues.join(", ")+". Reload or try another network."; el.style.display="block"; }
-      }
-    })();
-  </script>
+    <!-- Notes -->
+    <section class="notes-card">
+      <label for="dailyNotes">Notes</label>
+      <textarea id="dailyNotes" placeholder="Write your thoughts..."></textarea>
+    </section>
+
+    <!-- Progress -->
+    <section class="progress-card">
+      <label for="progressPic">Progress Photo</label>
+      <input type="file" id="progressPic" accept="image/*" />
+    </section>
+
+    <!-- Calendar -->
+    <section id="calendarSection">
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <!-- Floating Dock Menu -->
+  <nav class="floating-dock">
+    <button id="navCalendar">📅</button>
+    <button id="navNotes">📝</button>
+    <button id="navProgress">📷</button>
+    <button id="navCoach">🧠</button>
+  </nav>
+
+  <script src="app.js"></script>
 </body>
 </html>
