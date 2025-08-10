@@ -1,66 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
   <title>Oz Companion</title>
-  <meta name="theme-color" content="#f9c2a7"/>
-
-  <!-- Icons/OG (optional) -->
-  <link rel="icon" href="oz.png"/>
-
-  <!-- Styles -->
-  <!-- If you’re using an external stylesheet, keep this link: -->
-  <link rel="stylesheet" href="styles.css"/>
+  <meta name="theme-color" content="#ffb08f" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="oz.png" />
 
   <!-- React + Chart.js + Confetti (with fallbacks) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin
-          onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://unpkg.com/canvas-confetti@1.6.0/dist/confetti.browser.min.js'"></script>
-
-  <style>
-    /* Minimal safe-area padding + error banner so you’re not stuck if styles.css is missing */
-    html,body{margin:0;background:#fff7f1;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{padding-top:env(safe-area-inset-top);padding-bottom:calc(env(safe-area-inset-bottom) + 64px)}
-    #errorBanner{display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:10px;font-size:14px;z-index:10000;text-align:center}
-    #root{min-height:100vh}
-  </style>
+  <script
+    src="https://unpkg.com/react@18/umd/react.production.min.js"
+    crossorigin
+    onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'">
+  </script>
+  <script
+    src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    crossorigin
+    onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'">
+  </script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+    crossorigin
+    onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'">
+  </script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"
+    crossorigin
+    onerror="this.onerror=null;this.src='https://unpkg.com/canvas-confetti@1.6.0/dist/confetti.browser.min.js'">
+  </script>
 </head>
+
 <body>
-  <div id="errorBanner"></div>
-  <noscript style="display:block;padding:12px;background:#fee2e2;color:#991b1b;text-align:center">
-    JavaScript is required to run Oz Companion.
-  </noscript>
+  <!-- top-of-page error banner (auto-hidden unless an error occurs) -->
+  <div id="errorBanner" style="display:none;
+       position:fixed;top:0;left:0;right:0;z-index:9999;
+       background:#ef4444;color:#fff;padding:10px;text-align:center;
+       font:14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif;">
+  </div>
+
+  <!-- optional splash (your app.js can hide it after load) -->
+  <div id="ozSplash" class="splash" aria-hidden="true">
+    <img id="ozImg" alt="Oz" src="oz.png" />
+  </div>
+  <div id="ozBubble" class="bubble">Hydration is happiness 🐾</div>
+
+  <!-- React mount -->
   <div id="root"></div>
 
+  <!-- Your app (renders masthead, checklist, coach, chart, navbar, etc.) -->
+  <script src="app.js"></script>
+
   <script>
-    // Simple global error surfacer (helps catch syntax/CDN issues quickly)
-    window.addEventListener('error', function(ev){
-      var el=document.getElementById('errorBanner');
-      if(!el) return;
-      var msg = ev?.error?.message || ev?.message || 'Unknown error';
-      el.textContent = 'Error: ' + msg;
+    // lightweight global error -> banner
+    window.addEventListener('error', function (e) {
+      const el = document.getElementById('errorBanner');
+      if (!el) return;
+      el.textContent = 'Error: ' + (e.error && e.error.message ? e.error.message : e.message);
       el.style.display = 'block';
     });
-    (function(){
-      var issues=[];
-      if(!window.React) issues.push("React");
-      if(!window.ReactDOM) issues.push("ReactDOM");
-      if(!window.Chart) issues.push("Chart.js");
-      if(issues.length){
-        var el=document.getElementById('errorBanner');
-        el.textContent="CDN failed: "+issues.join(", ")+". Reload or try another network.";
-        el.style.display="block";
-      }
-    })();
   </script>
-
-  <!-- Your app code -->
-  <script src="app.js" defer></script>
 </body>
 </html>
