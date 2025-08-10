@@ -529,36 +529,44 @@ const Dashboard = ({ templates, days, setDays, recipes, goals }) => {
     ),
 
     // Notes + Smart Coach (header is the button)
-    e("div", { className: "card", style: { marginTop: 16 } },
-      e("div", {
-        onClick: runCoach, role: "button", tabIndex: 0,
-        onKeyDown: (ev) => { if (ev.key === "Enter" || ev.key === " ") runCoach(); },
-        style: {
-          display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between",
-          padding: "14px 12px", border: "1px solid #f3d0e1", borderRadius: 14,
-          background: "linear-gradient(90deg,#ffe4ef,#e9d5ff)", cursor: "pointer"
-        }
-      },
-        e("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
-          e("div", {
-            style: {
-              borderRadius: 14, border: "1px solid #f3d0e1", background: "#fff",
-              padding: "10px 14px", fontWeight: 800, fontSize: 18
-            }
-          }, "🧠 Smart Coach"),
-          e("div", { style: { color: "#475569" } }, "Tap to analyze your note and get relief + motivation")
-        )
-      ),
-      coachText && e("div", { className: "coachOut", style: { marginTop: 10, background: "#fff", border: "1px solid #f3d0e1", borderRadius: 12 } }, coachText),
-      e("textarea", {
-        value: day.note || "",
-        onChange: (ev) => {
-          const val = ev.target.value;
-          setDays(prev => { const next = prev.slice(); const d = { ...next[idx] }; d.note = val; next[idx] = d; return next; });
-        },
-        rows: 4, className: "noteArea", style: { marginTop: 10 }
-      })
+  /* --- Notes + Smart Coach (streamlined) --- */
+e("div",{className:"card",style:{marginTop:16}},
+  // Clickable coach card (this is the button)
+  e("div",{
+    className:"coachCard",
+    role:"button", tabIndex:0,
+    onClick:coach,
+    onKeyDown:(ev)=>{ if(ev.key==="Enter"||ev.key===" ") coach(); }
+  },
+    e("div",{className:"coachHeader"},
+      e("div",{className:"coachPill"},
+        "🧠",
+        e("span",{className:"coachTitle"},"Smart Coach")
+      )
     ),
+    e("div",{className:"coachHint"},
+      "Tap to analyze your note and get relief + motivation"
+    )
+  ),
+
+  // Coach output (UI only—never copied into the note)
+  coachText && e("div",{className:"coachOut"}, coachText),
+
+  // Your note field (stays separate)
+  e("textarea",{
+    value: day.note || "",
+    onChange:(ev)=>{
+      const val = ev.target.value;
+      setDays(prev=>{
+        const next = prev.slice();
+        const d = {...next[idx]}; d.note = val; next[idx] = d; return next;
+      });
+    },
+    rows:4,
+    className:"noteArea",
+    style:{marginTop:10}
+  })
+),
 
     // Upcoming ingredients
     e("div", { className: "card", style: { marginTop: 16 } },
