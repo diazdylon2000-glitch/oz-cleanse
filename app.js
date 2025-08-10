@@ -8,22 +8,26 @@
    - Loader bubble text + soft CDN checks
 */
 
-(function splashInit(){
+(function () {
   const lines = [
     "You’ve got this!","Small habits, big change","Progress, not perfection",
     "Sip, breathe, reset","Strong body, calm mind","Hydration is happiness 🐾",
     "Future-you says thanks","Gentle + consistent + kind","Shine time ✨",
     "Keep it playful","You’re doing the work 💪"
   ];
-  const b = document.getElementById("ozBubble");
-  if (b) b.textContent = lines[Math.floor(Math.random()*lines.length)];
-  window.addEventListener("load", ()=>{
-    const s = document.getElementById("ozSplash");
-    const bb = document.getElementById("ozBubble");
-    setTimeout(()=>{
-      if (s) s.classList.add("fadeOut");
-      if (bb) bb.classList.add("fadeOut");
-      setTimeout(()=>{ if(s) s.style.display="none"; if(bb) bb.style.display="none"; }, 650);
+  const bubble = document.getElementById("ozBubble");
+  if (bubble) bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+
+  window.addEventListener("load", () => {
+    const splash = document.getElementById("ozSplash");
+    const note = document.getElementById("ozBubble");
+    setTimeout(() => {
+      if (splash) splash.classList.add("fadeOut"); // <-- camelCase
+      if (note) note.classList.add("fadeOut");     // <-- camelCase
+      setTimeout(() => {
+        if (splash) splash.style.display = "none";
+        if (note) note.style.display = "none";
+      }, 650);
     }, 1100);
   });
 })();
