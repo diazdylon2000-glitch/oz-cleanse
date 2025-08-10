@@ -617,48 +617,33 @@ const Dashboard = ({ templates, days, setDays, recipes, goals }) => {
       e(Checklist, { items, state: checks, onToggle: toggleCheck })
     ),
 
-    // Notes + Smart Coach (header is the button)
-    e("div", { className: "card", style: { marginTop: 16 } },
-      e("div", {
-        onClick: runCoach,
-        role: "button",
-        tabIndex: 0,
-        onKeyDown: (ev) => { if (ev.key === "Enter" || ev.key === " ") runCoach(); },
-        style: {
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-          padding: "14px 12px", border: "1px solid #f3d0e1", borderRadius: 14,
-          background: "linear-gradient(90deg,#ffe4ef,#e9d5ff)", cursor: "pointer"
-        }
-      },
-        e("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
-          e("div", {
-            style: {
-              borderRadius: 14, border: "1px solid #f3d0e1", background: "#fff",
-              padding: "10px 14px", fontWeight: 800, fontSize: 18
-            }
-          }, "🧠 Smart Coach"),
-          e("div", { style: { color: "#475569" } }, "Tap to analyze your note and get relief + motivation")
-        ),
-        e("div", { className: "badge" }, "Coach")
-      ),
-      coachText && e("div", {
-        className: "coachOut",
-        style: { marginTop: 10, background: "#fff", border: "1px solid #f3d0e1", borderRadius: 12, whiteSpace: "pre-wrap", padding: 12 }
-      }, coachText),
-      e("textarea", {
-        value: day.note || "",
-        onChange: (ev) => {
-          const val = ev.target.value;
-          setDays((prev) => {
-            const next = prev.slice();
-            const d2 = { ...next[idx] }; d2.note = val; next[idx] = d2; return next;
-          });
-        },
-        rows: 4,
-        className: "noteArea",
-        style: { marginTop: 10 }
-      })
-    ),
+// Notes + Smart Coach (card acts as the button)
+e("div", { className: "card", style: { marginTop: 16 } },
+  e("div", {
+    onClick: runCoach,
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: (ev) => { if (ev.key === "Enter" || ev.key === " ") runCoach(); },
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "12px 14px",
+      border: "1px solid #f3d0e1",
+      borderRadius: 14,
+      background: "linear-gradient(90deg,#ffe4ef,#e9d5ff)",
+      cursor: "pointer"
+    }
+  },
+    e("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+      e("span", { style: { fontSize: "1.6rem" } }, "🧠"),
+      e("div", null,
+        e("div", { style: { fontWeight: "bold", fontSize: "1rem", lineHeight: "1.2" } }, "Smart Coach"),
+        e("div", { style: { fontSize: "0.85rem", color: "#444" } }, "Tap to analyze your note")
+      )
+    )
+  )
+),
 
     // Next ingredients
     (function () {
