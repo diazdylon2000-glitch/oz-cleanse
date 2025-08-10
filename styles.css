@@ -160,3 +160,24 @@ html,body{
 /* Utility */
 h1,h2{margin:0 0 10px}
 .center{max-width:940px;margin:0 auto}
+/* Splash */
+.splash{
+  position:fixed; inset:0; z-index:9999;
+  background:#fef3ec; display:flex; align-items:center; justify-content:center;
+  padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);
+}
+.splash-img{
+  width:170px; height:170px; object-fit:cover; border-radius:50%;
+  border:6px solid #fff; box-shadow:0 24px 60px rgba(149,92,51,.25);
+}
+.bubble{
+  position:fixed; left:50%; top:62%; transform:translate(-50%,-10px);
+  max-width:min(90vw,360px); z-index:10000;
+  background:#fff; border:2px solid #f3d0e1; border-radius:14px;
+  padding:10px 12px; font-size:13px; line-height:1.25;
+  box-shadow:0 10px 32px rgba(236,72,153,.15);
+}
+@media (min-width:600px){ .bubble{ left:50%; top:54%; transform:translateX(92px); } }
+
+.fade-out{ animation:ozFade .6s ease forwards; }
+@keyframes ozFade { to{ opacity:0; visibility:hidden; } }
