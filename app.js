@@ -553,19 +553,23 @@
       e("nav", { className: "tabs" },
         [
           { id: "dashboard", icon: "🏠" },
-          { id: "grocery", icon: "🛒" },
-          { id: "calendar", icon: "📅" },
-          { id: "photos", icon: "📷" },
-          { id: "settings", icon: "⚙️" }
-        ].map(t => e("button", {
-          key: t.id,
-          className: "btn" + (tab === t.id ? " active" : ""),
-          onClick: function () { setTab(t.id); },
-          "aria-label": t.id
-        }, t.icon))
+          { id: "grocery",   icon: "🛒" },
+          { id: "calendar",  icon: "📅" },
+          { id: "photos",    icon: "📷" },
+          { id: "settings",  icon: "⚙️" }
+        ].map(function (t) {
+          return e("button", {
+            key: t.id,
+            className: "btn" + (tab === t.id ? " active" : ""),
+            onClick: function () { setTab(t.id); },
+            "aria-label": t.id
+          }, t.icon);
+        })
       )
-    );
-  }
+    ); // <-- closes: return e("div", null, ...)
 
+  } // <-- closes: function App()
+
+  // Mount
   ReactDOM.createRoot(document.getElementById("root")).render(e(App));
 })();
