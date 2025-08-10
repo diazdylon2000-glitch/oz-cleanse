@@ -114,10 +114,65 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bot
 /* Notes */
 .noteArea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:16px}
 
-/* Tabs */
-.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid var(--line)}
-.tabs .btn{flex:1;border-radius:12px}
-.tabs .btn.active{background:#111827;color:#fff;border-color:#111827}
+/* New bottom tab bar */
+.tabbar {
+  position: sticky; /* or fixed if you prefer */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: max(8px, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  background: linear-gradient(180deg, transparent, rgba(255, 240, 232, 0.9));
+}
+
+/* Centered pill wrapper */
+.tabbar-inner {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(236, 72, 153, .12); /* rose shadow */
+}
+
+/* Buttons */
+.tabbtn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #ffffff, #fff7f1);
+  color: #2563eb; /* iOS blue tone */
+  padding: 10px 16px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+  white-space: nowrap;
+}
+
+.tabbtn:hover { transform: translateY(-1px); }
+.tabbtn:active { transform: translateY(0); }
+
+/* Active */
+.tabbtn.active {
+  color: #0f172a;
+  border-color: transparent;
+  background: linear-gradient(90deg, #ffd9c6, #f7c5de); /* peach ↔ rose */
+  box-shadow: inset 0 -2px 0 rgba(255,255,255,.7), 0 6px 18px rgba(236,72,153,.18);
+}
+
+/* Compact on small screens */
+@media (max-width: 380px) {
+  .tabbtn { padding: 9px 14px; font-size: 14px; }
+  .tabbar-inner { gap: 8px; }
+}
 
 /* Modal (Settings: pick goals) */
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:90}
