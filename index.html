@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -9,54 +9,35 @@
   <title>Oz Companion</title>
   <meta name="theme-color" content="#f9c2a7" />
 
-  <!-- Your stylesheet (floating dock, coach styles, paw checklist, etc.) -->
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Icons (optional) -->
-  <link rel="icon" href="oz.png" />
+  <!-- React / Chart / Confetti (UMD) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js" crossorigin></script>
+  <script src="https://unpkg.com/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
 </head>
 <body>
-  <!-- Top error banner (populated by app.js on any runtime error/CDN issue) -->
-  <div id="errorBanner" role="alert" style="display:none"></div>
+  <!-- Error banner (shows unhandled errors) -->
+  <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:10px;font-size:14px;z-index:10000;text-align:center"></div>
 
-  <!-- Splash / Loader -->
-  <div id="ozSplash" class="splash" aria-hidden="true">
-    <img id="ozImg" src="oz.png" alt="Oz" />
+  <!-- Splash / loader -->
+  <div id="ozSplash" class="splash">
+    <img id="ozImg" alt="Oz" src="oz.png" />
   </div>
-  <div id="ozBubble" class="bubble" aria-live="polite">Hydration is happiness 🐾</div>
+  <div id="ozBubble" class="bubble">Hydration is happiness 🐾</div>
 
-  <!-- React mount -->
+  <!-- App root -->
   <div id="root"></div>
 
-  <!-- CDNs: keep this order; do not defer these -->
-  <script
-    src="https://unpkg.com/react@18/umd/react.production.min.js"
-    crossorigin
-  ></script>
-  <script
-    src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
-    crossorigin
-  ></script>
-  <script
-    src="https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js"
-    crossorigin
-  ></script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"
-    crossorigin
-  ></script>
-
-  <!-- Your app (deferred so the CDNs and DOM are ready) -->
-  <script src="app.js" defer></script>
-
-  <!-- NoScript fallback -->
   <noscript>
-    <style>
-      #ozSplash, #ozBubble { display: none !important; }
-    </style>
-    <div style="padding:16px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">
-      Oz Companion needs JavaScript to run. Please enable JavaScript in your browser and reload.
+    <div style="padding:16px;font-family:system-ui">
+      This app needs JavaScript enabled.
     </div>
   </noscript>
+
+  <!-- Your application logic -->
+  <script src="app.js"></script>
 </body>
 </html>
