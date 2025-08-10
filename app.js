@@ -708,16 +708,18 @@ const App = ()=>{
       onImportText: importFromChatGPTPrompt
     }),
 
-   // Tabs (emoji-only floating dock)
-e("div", { className: "tabs" },
-  e("button", { className: "btn" + (tab === "dash" ? " active" : ""), onClick: () => setTab("dash"), "aria-label": "Dashboard" }, "🏠"),
-  e("button", { className: "btn" + (tab === "groceries" ? " active" : ""), onClick: () => setTab("groceries"), "aria-label": "Groceries" }, "🛒"),
-  e("button", { className: "btn" + (tab === "calendar" ? " active" : ""), onClick: () => setTab("calendar"), "aria-label": "Calendar" }, "📅"),
-  e("button", { className: "btn" + (tab === "photos" ? " active" : ""), onClick: () => setTab("photos"), "aria-label": "Photos" }, "📷"),
-  e("button", { className: "btn" + (tab === "settings" ? " active" : ""), onClick: () => setTab("settings"), "aria-label": "Settings" }, "⚙️")
-)
+    // Tabs (emoji-only floating dock)
+    e("div", { className: "tabs" },
+      e("button", { className: "btn" + (tab === "dash" ? " active" : ""), onClick: () => setTab("dash"), "aria-label": "Dashboard" }, "🏠"),
+      e("button", { className: "btn" + (tab === "groceries" ? " active" : ""), onClick: () => setTab("groceries"), "aria-label": "Groceries" }, "🛒"),
+      e("button", { className: "btn" + (tab === "calendar" ? " active" : ""), onClick: () => setTab("calendar"), "aria-label": "Calendar" }, "📅"),
+      e("button", { className: "btn" + (tab === "photos" ? " active" : ""), onClick: () => setTab("photos"), "aria-label": "Photos" }, "📷"),
+      e("button", { className: "btn" + (tab === "settings" ? " active" : ""), onClick: () => setTab("settings"), "aria-label": "Settings" }, "⚙️")
+    )
+  ); // ← closes the return e("div", ...)
+};   // ← closes function App()
 
-/* ---------- Mount ---------- */
-if (window.ReactDOM) {
+// ---------- Mount ----------
+if (window.ReactDOM && document.getElementById("root")) {
   ReactDOM.createRoot(document.getElementById("root")).render(e(App));
 }
