@@ -2,32 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Prevent iOS zoom on inputs + support notches -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Oz Cleanse Companion</title>
+  <meta name="theme-color" content="#ffc0a9" />
+  <link rel="icon" type="image/png" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Error Banner -->
-  <div id="errorBanner"></div>
+  <!-- Error banner (ID must be 'err' for app.js) -->
+  <div id="err" style="display:none"></div>
 
-  <!-- Splash Screen -->
-  <div id="ozSplash" class="splash">
-    <img id="ozImg" src="oz.png" alt="Oz" />
+  <!-- Splash screen (IDs must be 'splash' and 'bubble') -->
+  <div id="splash" class="splash">
+    <img id="ozPic" src="oz.png" alt="Oz" />
   </div>
+  <div id="bubble" class="bubble">Hydration is happiness 🐾</div>
 
-  <!-- Oz Bubble -->
-  <div id="ozBubble" class="bubble">Hydration is happiness 🐾</div>
+  <!-- App root -->
+  <div class="wrap"><div id="root"></div></div>
 
-  <!-- React App Root -->
-  <div id="root"></div>
+  <!-- Guard: never hang on splash; surface JS errors -->
+  <script>
+    (function () {
+      setTimeout(function () {
+        var s = document.getElementById('splash');
+        var b = document.getElementById('bubble');
+        if (s) s.style.display = 'none';
+        if (b) b.style.display = 'none';
+      }, 3200);
 
-  <!-- React, Chart.js, Confetti -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
+      window.addEventListener('error', function (e) {
+        var box = document.getElementById('err');
+        if (!box) return;
+        box.textContent = 'App error: ' + (e.error ? e.error.message : e.message);
+        box.style.display = 'block';
+        var s = document.getElementById('splash');
+        var b = document.getElementById('bubble');
+        if (s) s.style.display = 'none';
+        if (b) b.style.display = 'none';
+      });
+    })();
+  </script>
+
+  <!-- React + Chart.js (with fallbacks) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"
+          onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
 
-  <!-- Your App -->
+  <!-- Your app (must be last, no type="module") -->
   <script src="app.js"></script>
 </body>
 </html>
