@@ -6,66 +6,32 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
-  <title>Oz Cleanse Companion</title>
-  <meta name="theme-color" content="#ffe9df" />
+  <title>Oz Companion</title>
+  <meta name="theme-color" content="#ffe3db" />
   <link rel="icon" href="oz.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=18" />
 
-  <!-- React + Chart.js + Confetti (with small fallback chains) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin
-          onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'"></script>
+  <!-- React + Chart.js + Confetti (UMD builds) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
 </head>
-
 <body>
-  <!-- Error banner (auto-shown if any JS error occurs) -->
-  <div id="errorBanner"></div>
+  <!-- Fail-safe error banner -->
+  <div id="errorBanner" class="err" role="alert" aria-live="polite" style="display:none"></div>
 
-  <!-- Splash (Oz + bubble under the image) -->
-  <div id="ozSplash" class="splash">
-    <img id="ozImg" src="oz.png" alt="Oz" />
-  </div>
-  <div id="ozBubble" class="bubble">Loading…</div>
-
-  <!-- App root -->
-  <div class="wrap">
-    <div id="root"></div>
+  <!-- Splash (centered, mobile friendly) -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <img src="oz.png" alt="Oz smiling" class="splash-oz" />
+      <div id="splashAff" class="splash-bubble">Loading…</div>
+    </div>
   </div>
 
-  <!-- Safety: never hang on splash -->
-  <script>
-    (function () {
-      setTimeout(function () {
-        var s = document.getElementById("ozSplash");
-        var b = document.getElementById("ozBubble");
-        if (s) s.classList.add("fadeOut");
-        if (b) b.classList.add("fadeOut");
-        setTimeout(function () {
-          if (s) s.style.display = "none";
-          if (b) b.style.display = "none";
-        }, 700);
-      }, 3500);
-
-      window.addEventListener("error", function (e) {
-        var el = document.getElementById("errorBanner");
-        if (el) {
-          var msg = e.error && e.error.message ? e.error.message : e.message;
-          el.textContent = "Error: " + msg;
-          el.style.display = "block";
-        }
-        var s = document.getElementById("ozSplash");
-        var b = document.getElementById("ozBubble");
-        if (s) s.style.display = "none";
-        if (b) b.style.display = "none";
-      });
-    })();
-  </script>
+  <div id="root"></div>
 
   <!-- App -->
-  <script src="app.js"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
