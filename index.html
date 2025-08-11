@@ -4,32 +4,77 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Oz Cleanse Companion</title>
+
+  <!-- Address bar tint for light & dark -->
   <meta name="theme-color" content="#ffe5da" />
+  <meta name="theme-color" content="#0f1218" media="(prefers-color-scheme: dark)" />
+
   <link rel="icon" type="image/png" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
-  <!-- React + Chart + Confetti (with fallbacks) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
+
+  <!-- Faster CDN handshakes -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 </head>
 <body>
   <!-- Error banner -->
-  <div id="errorBanner" class="err"></div>
+  <div id="errorBanner" class="err" role="alert" aria-live="assertive"></div>
 
   <!-- Splash -->
   <div id="ozSplash" class="splash">
     <div class="splash-inner">
-      <img id="ozImg" src="oz.png" alt="Oz" />
+      <img id="ozImg" src="oz.png" alt="Oz" width="168" height="168" decoding="async" fetchpriority="high" />
       <div id="ozBubble" class="bubble">Loading…</div>
     </div>
   </div>
 
-  <!-- App -->
+  <noscript>
+    <div class="err show" role="alert">This app needs JavaScript enabled.</div>
+  </noscript>
+
+  <!-- App root -->
   <div class="wrap">
     <div id="root"></div>
   </div>
 
+  <!-- Loader hardening: never-stuck + error surfacing -->
+  <script>
+    (function () {
+      var splash = document.getElementById('ozSplash');
+      var bubble = document.getElementById('ozBubble');
+      var banner = document.getElementById('errorBanner');
+
+      function hideSplash() {
+        if (!splash) return;
+        splash.classList.add('fade-out');
+        setTimeout(function(){ splash.style.display = 'none'; }, 650);
+        if (bubble) bubble.style.display = 'none';
+      }
+
+      // Safety net: never let splash hang forever
+      setTimeout(hideSplash, 3500);
+
+      // If any runtime error happens, show it and clear splash
+      window.addEventListener('error', function (e) {
+        if (banner) {
+          banner.textContent = (e && e.message) ? ('Error: ' + e.message) : 'An error occurred.';
+          banner.classList.add('show');
+        }
+        hideSplash();
+      });
+
+      // Optional: hide splash as soon as React mounts root
+      document.addEventListener('oz:ready', hideSplash);
+    })();
+  </script>
+
+  <!-- React + Chart + Confetti -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
+
+  <!-- Your app bundle -->
   <script src="app.js"></script>
 </body>
 </html>
