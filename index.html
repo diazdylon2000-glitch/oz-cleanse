@@ -2,55 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Oz Companion</title>
-  <meta name="theme-color" content="#ffe4ef" />
+  <meta name="theme-color" content="#ffe8e2" />
   <link rel="icon" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Error banner (hidden unless something throws) -->
+  <div id="errorBanner" class="err" role="alert" aria-live="polite"></div>
 
-  <!-- React + Chart.js + Confetti -->
+  <!-- Splash (Oz + affirmation under) -->
+  <div id="ozSplash" class="splash" aria-hidden="true">
+    <div class="splash-inner">
+      <img src="oz.png" alt="Oz" class="splash-oz" />
+      <div id="ozBubble" class="splash-bubble">Loading…</div>
+    </div>
+  </div>
+
+  <!-- App root -->
+  <div id="root"></div>
+
+  <!-- Deps (UMD) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
-</head>
-<body>
-  <!-- Splash -->
-  <div id="splash" class="splash">
-    <div class="splash-inner">
-      <img class="splash-img" src="oz.png" alt="Oz" />
-      <div id="splashLine" class="splash-line">Loading…</div>
-    </div>
-  </div>
-
-  <!-- Error banner (auto-shown on runtime error) -->
-  <div id="err" class="err" style="display:none"></div>
 
   <!-- App -->
-  <div id="root"></div>
-<script>
-  (function () {
-    function hideSplash() {
-      var s = document.getElementById('splash');
-      if (!s) return;
-      s.classList.add('hide');
-      setTimeout(function(){ s.style.display = 'none'; }, 500);
-    }
-    // Never hang: force-hide at 3.5s even if app fails to mount
-    window.addEventListener('DOMContentLoaded', function () {
-      setTimeout(hideSplash, 3500);
-    });
-    // If any runtime error happens, show a banner and hide splash
-    window.addEventListener('error', function (e) {
-      var b = document.getElementById('err');
-      if (b) {
-        b.textContent = 'App error: ' + (e.error && e.error.message ? e.error.message : e.message);
-        b.style.display = 'block';
-      }
-      hideSplash();
-    });
-  })();
-</script>
   <script src="app.js"></script>
 </body>
 </html>
