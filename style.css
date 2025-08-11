@@ -1,40 +1,32 @@
-:root{
-  --bg:#fff7f2; --card:#ffffff; --ink:#253047; --muted:#6a7a90;
-  --line:#f3d0e1; --rose:#ffe6f2; --peach:#ffe5da; --accent:#ec4899; --glow:#ffa56e;
+:root {
+  --bg: #ffe5da;
+  --bg-light: #fff7f3;
+  --text: #1a1a1a;
+  --muted: #6e6e6e;
+  --line: #e5d2ca;
+  --accent: linear-gradient(90deg, #ff8a65, #ff6f91);
 }
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-.wrap{max-width:980px;margin:12px auto 96px;padding:0 14px}
 
-/* Splash */
-.splash{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:80}
-.splash-inner{display:flex;flex-direction:column;align-items:center;gap:12px}
-.splash img{width:168px;height:168px;border-radius:9999px;border:6px solid #fff;box-shadow:0 22px 60px rgba(150,90,60,.25);object-fit:cover}
-.bubble{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:10px 14px;box-shadow:0 10px 28px rgba(236,72,153,.15);font-size:14px}
-.fade-out{opacity:0;transition:opacity .6s ease}
+/* Global Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
 
-/* Error */
-.err{display:none;position:fixed;top:12px;left:12px;right:12px;z-index:100;background:#fee2e2;border:1px solid #fecaca;color:#7f1d1d;border-radius:12px;padding:10px}
-
-/* Cards & UI */
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 26px rgba(236,72,153,.06);padding:14px}
-.badge{display:inline-block;border-radius:9999px;padding:3px 10px;border:1px solid var(--line);background:#fff;font-size:12px}
-.btn{border-radius:14px;border:1px solid var(--line);background:#fff;padding:8px 12px;cursor:pointer}
-.btn.primary{background:linear-gradient(90deg,#ffd7bf,#ffe8dc)}
-.pill{border-radius:9999px;padding:.45rem .8rem;border:1px solid #ffd8be;background:#fff;transition:transform .12s}
-.pill.on{background:linear-gradient(90deg,#ffdcb9,#ffe8dc)}
-.paw{display:inline-flex;align-items:center;justify-content:center;height:36px;width:36px;border-radius:9999px;border:1px solid #f0cbb0;background:#fff;transition:transform .12s, background .2s; cursor:pointer}
-.paw.on{background:linear-gradient(90deg,#f9d49a,#ffd2c8);transform:scale(1.02)}
-.prog{height:10px;border-radius:9999px;background:#fde7e0;overflow:hidden}
-.prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--glow),var(--accent));width:0;transition:width .35s ease}
-
-/* Mast (header) — mobile friendly */
+/* Mast (Header) */
 .mast {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .mast .left {
   display: flex;
@@ -42,7 +34,6 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-
   gap: 10px;
   min-width: 0;
   flex: 1;
-  flex-wrap: wrap;
 }
 .mast img {
   height: 40px;
@@ -71,6 +62,8 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-
   letter-spacing: .6px;
   font-size: 13px;
 }
+
+/* Day Navigation */
 .day-nav {
   display: flex;
   align-items: center;
@@ -86,41 +79,73 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-
   min-width: 66px;
   font-size: 14px;
 }
-@media (max-width: 420px) {
-  .mast-title {
-    flex-basis: 100%;
-  }
-  .mast .phase {
-    margin-top: 2px;
-  }
-  .day-nav .btn {
-    padding: 6px 8px;
-  }
-  .day-chip {
-    padding: 4px 8px;
-    min-width: auto;
-    font-size: 13px;
-  }
+
+/* Progress Bar */
+.progress {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--bg-light);
+  overflow: hidden;
+}
+.progress-inner {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
 }
 
-/* Coach */
-.coachCard{border-radius:16px;background:linear-gradient(90deg,#ffe6f5,#f0e7ff);border:1px solid var(--line);padding:12px;cursor:pointer}
-.coachOut{margin-top:8px;border-radius:12px;border:1px dashed #f4c2de;padding:10px;background:#fffdf8}
-.noteArea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:14px;padding:12px;font-size:16px}
+/* Card Styles */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  margin-bottom: 16px;
+}
 
-/* Tabs (floating) */
-.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;padding:10px 14px;background:rgba(255,255,255,.85);backdrop-filter:saturate(1.2) blur(6px);border-top:1px solid var(--line);z-index:60}
-.tabs .btn{flex:1}
+/* Checklist Items */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.checklist-item:last-child {
+  border-bottom: none;
+}
+.checklist-item input[type="checkbox"] {
+  margin-right: 10px;
+}
 
-/* Modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.22);display:grid;place-items:center;z-index:70}
-.sheet{width:min(520px,92vw);background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;max-height:80vh;overflow:auto}
+/* Smart Coach */
+.smart-coach {
+  background: #f9f1ff;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  color: var(--text);
+}
+.smart-coach ul {
+  margin: 6px 0 0 20px;
+}
 
-/* Inputs (prevent iOS zoom) */
-input,select,textarea{font-size:16px}
-
-/* Utility */
-.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.grid{display:grid;gap:14px}
-.grid-2{grid-template-columns:repeat(2,1fr)}
-@media(max-width:720px){.grid-2{grid-template-columns:1fr}}
+/* Bottom Navigation */
+.nav {
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+.nav button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--muted);
+}
+.nav button.active {
+  color: var(--text);
+  font-weight: 700;
+}
