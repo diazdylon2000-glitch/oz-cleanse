@@ -2,36 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Oz Companion</title>
-  <meta name="theme-color" content="#ffe3db" />
+  <meta name="theme-color" content="#ffe6da" />
   <link rel="icon" href="oz.png" />
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Error banner (auto-populated if anything breaks) -->
+  <div id="errorBanner"></div>
 
-  <!-- React + Chart.js + Confetti (UMD builds) -->
+  <!-- Splash (image with affirmation bubble under it) -->
+  <div id="ozSplash" class="splash" aria-label="Loading">
+    <img id="ozImg" src="oz.png" alt="Oz" />
+    <div id="ozBubble" class="bubble">Loading…</div>
+  </div>
+
+  <!-- App root -->
+  <div class="wrap">
+    <div id="root"></div>
+  </div>
+
+  <!-- React + Chart.js (UMD) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
-</head>
-<body>
-  <!-- Fail-safe error banner -->
-  <div id="errorBanner" class="err" role="alert" aria-live="polite" style="display:none"></div>
 
-  <!-- Splash (centered, mobile friendly) -->
-  <div id="splash" class="splash">
-    <div class="splash-inner">
-      <img src="oz.png" alt="Oz smiling" class="splash-oz" />
-      <div id="splashAff" class="splash-bubble">Loading…</div>
-    </div>
-  </div>
+  <!-- Splash logic: random line + safe fade-out -->
+  <script>
+    (function () {
+      var lines = [
+        "You’ve got this!","Small habits, big change","Progress, not perfection",
+        "Sip, breathe, reset","Strong body, calm mind","Hydration is happiness 🐾",
+        "Future-you says thanks","Gentle + consistent + kind","Shine time ✨",
+        "Keep it playful","You’re doing the work 💪"
+      ];
+      function pickLine(){
+        try{
+          var used = JSON.parse(localStorage.getItem("oz.usedLines") || "[]");
+          var avail = lines.filter(function (t) { return used.indexOf(t) === -1; });
+          if (avail.length === 0) { used = []; avail = lines.slice(); }
+          var pick = avail[Math.floor(Math.random() * avail.length)];
+          used.push(pick);
+          localStorage.setItem("oz.usedLines", JSON.stringify(used));
+          return pick;
+        }catch(e){ return lines[Math.floor(Math.random()*lines.length)]; }
+      }
+      var bubble = document.getElementById("ozBubble");
+      if (bubble) bubble.textContent = pickLine();
 
-  <div id="root"></div>
+      function fadeSplash() {
+        var s = document.getElementById("ozSplash");
+        if (!s) return;
+        s.classList.add("fadeOut");
+        setTimeout(function(){ s.style.display="none"; }, 650);
+      }
+      window.addEventListener("load", function(){ setTimeout(fadeSplash, 1100); });
+      setTimeout(function(){ // never stuck
+        var s=document.getElementById("ozSplash");
+        if (s && s.style.display!=="none") fadeSplash();
+      }, 3200);
 
-  <!-- App -->
-  <script src="app.js?v=18"></script>
+      window.addEventListener("error", function(e){
+        var el=document.getElementById("errorBanner");
+        if (el) {
+          el.textContent="Error: "+(e.error && e.error.message ? e.error.message : e.message);
+          el.style.display="block";
+        }
+        fadeSplash();
+      });
+    })();
+  </script>
+
+  <!-- Your app -->
+  <script src="app.js"></script>
 </body>
 </html>
