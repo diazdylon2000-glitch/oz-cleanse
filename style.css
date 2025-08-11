@@ -35,16 +35,46 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .prog{height:10px;border-radius:9999px;background:#fde7e0;overflow:hidden}
 .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--glow),var(--accent));width:0;transition:width .35s ease}
 
-/* Mast (header) */
-.mast{display:flex;align-items:center;gap:12px;justify-content:space-between}
-.mast .left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-.mast img{height:40px;width:40px;border-radius:50%;object-fit:cover;flex-shrink:0}
-.mast-title{display:flex;flex-direction:column;min-width:0}
-.mast h1{margin:0;font-weight:800;letter-spacing:.2px;
-  font-size:clamp(19px,5.4vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mast .phase{color:var(--muted);font-weight:700;letter-spacing:.6px;font-size:13px}
+/* ===== Mast (Header) ===== */
+.mast{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-width:0; /* allow children to shrink */
+}
+.mast .left{
+  display:flex;align-items:center;gap:10px;
+  min-width:0; /* critical so text can ellipsize instead of pushing layout */
+  flex:1;
+}
+.mast img{
+  height:40px;width:40px;border-radius:50%;object-fit:cover;flex-shrink:0;
+}
+.mast-title{
+  display:flex;flex-direction:column;min-width:0; /* so h1/phase can truncate nicely */
+}
+.mast h1{
+  margin:0;font-weight:800;letter-spacing:.2px;
+  font-size:clamp(18px,5.4vw,22px);
+  line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis; /* keep one-line title */
+}
+.mast .phase{
+  color:var(--muted);font-weight:700;letter-spacing:.6px;font-size:13px;
+  line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis; /* keep on one line under title */
+}
+
+/* Day Navigation (stays on right, never overlaps title) */
 .day-nav{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .day-chip{border:2px solid var(--line);border-radius:16px;padding:8px 16px;background:#fff;text-align:center}
+
+/* Small-screen tuning so title + avatar always fit */
+@media (max-width: 380px){
+  .mast img{height:36px;width:36px}
+  .mast h1{font-size:clamp(17px,5.2vw,20px)}
+  .mast .phase{font-size:12px}
+  .day-chip{padding:6px 12px}
+  .btn{padding:7px 10px}
+}
 
 /* Coach */
 .coachCard{border-radius:16px;background:linear-gradient(90deg,var(--rose),#f0e7ff);
@@ -52,9 +82,12 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .coachOut{margin-top:8px;border-radius:12px;border:1px dashed #f4c2de;padding:10px;background:#fffdf8;white-space:pre-wrap}
 .noteArea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:14px;padding:12px;font-size:16px}
 
-/* Tabs */
-.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;padding:10px 14px;
-  background:rgba(255,255,255,.85);backdrop-filter:saturate(1.2) blur(6px);border-top:1px solid var(--line);z-index:60}
+/* Tabs (Bottom Nav) */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;padding:10px 14px;
+  background:rgba(255,255,255,.85);backdrop-filter:saturate(1.2) blur(6px);
+  border-top:1px solid var(--line);z-index:60
+}
 .tabs .btn{flex:1}
 
 /* Modal */
