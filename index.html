@@ -2,125 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Oz Cleanse Companion</title>
-  <meta name="theme-color" content="#ffc0a9" />
+  <meta name="theme-color" content="#ffe5da" />
   <link rel="icon" type="image/png" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
+  <!-- React + Chart + Confetti (with fallbacks) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
 </head>
 <body>
-  <!-- Error Banner -->
-  <div id="errorBanner" style="display:none"></div>
+  <!-- Error banner -->
+  <div id="errorBanner" class="err"></div>
 
   <!-- Splash -->
   <div id="ozSplash" class="splash">
-    <img id="ozImg" src="oz.png" alt="Oz" />
+    <div class="splash-inner">
+      <img id="ozImg" src="oz.png" alt="Oz" />
+      <div id="ozBubble" class="bubble">Loading…</div>
+    </div>
   </div>
 
-  <!-- Bubble (affirmations appear here BEFORE the app mounts) -->
-  <div id="ozBubble" class="bubble">Loading…</div>
+  <!-- App -->
+  <div class="wrap">
+    <div id="root"></div>
+  </div>
 
-  <!-- React Root -->
-  <div id="root"></div>
-
-  <!-- React + Chart + Confetti (with fallbacks) -->
-  <script
-    src="https://unpkg.com/react@18/umd/react.production.min.js"
-    crossorigin
-    onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js'">
-  </script>
-  <script
-    src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
-    crossorigin
-    onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js'">
-  </script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
-    crossorigin
-    onerror="this.onerror=null;this.src='https://unpkg.com/chart.js@4.4.3/dist/chart.umd.js'">
-  </script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"
-    crossorigin
-    onerror="this.onerror=null;this.src='https://unpkg.com/canvas-confetti@1.6.0/dist/confetti.browser.min.js'">
-  </script>
-
-  <!-- Pre-app: set an affirmation immediately + never-stuck splash + CDN checks -->
-  <script>
-    (function () {
-      // 1) Affirmation immediately (shows even if React hasn’t mounted yet)
-      var LINES = [
-        "You’ve got this!", "Small habits, big change", "Progress, not perfection",
-        "Sip, breathe, reset", "Strong body, calm mind", "Hydration is happiness 🐾",
-        "Future-you says thanks", "Gentle + consistent + kind", "Shine time ✨",
-        "Keep it playful", "You’re doing the work 💪"
-      ];
-      var b = document.getElementById("ozBubble");
-      if (b) b.textContent = LINES[Math.floor(Math.random() * LINES.length)];
-
-      // 2) Never-stuck splash + error banner if CDNs fail
-      function hideSplash() {
-        var s = document.getElementById("ozSplash");
-        var bb = document.getElementById("ozBubble");
-        if (s) s.style.display = "none";
-        if (bb) bb.style.display = "none";
-      }
-      // normal hide on load
-      if (document.readyState === "complete") hideSplash();
-      else window.addEventListener("load", hideSplash);
-      // fail-safe hide after 3.5s
-      setTimeout(hideSplash, 3500);
-      // hide on any global error
-      window.addEventListener("error", hideSplash);
-
-      // CDN health check -> show banner if something’s missing
-      function banner(msg) {
-        var el = document.getElementById("errorBanner");
-        if (!el) return;
-        el.textContent = msg;
-        el.style.cssText =
-          "display:block;position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:10px;font:14px system-ui;z-index:9999;text-align:center";
-      }
-      setTimeout(function () {
-        var missing = [];
-        if (!window.React) missing.push("React");
-        if (!window.ReactDOM) missing.push("ReactDOM");
-        if (!window.Chart) missing.push("Chart.js");
-        if (missing.length) {
-          banner("CDN failed: " + missing.join(", ") + ". Reload or try another network.");
-        }
-      }, 2000);
-    })();
-  </script>
-
-  <!-- Your App (must be last) -->
   <script src="app.js"></script>
-
-  <!-- Post-app: confirm mount & re-hide splash just in case -->
-  <script>
-    (function () {
-      // If app mounted, #root will exist and this runs after app.js
-      try {
-        var root = document.getElementById("root");
-        if (root) {
-          var flag = document.createElement("div");
-          flag.id = "mountFlag";
-          flag.style.cssText = "position:fixed;left:-9999px;top:-9999px;";
-          flag.textContent = "mounted";
-          root.appendChild(flag);
-        }
-      } catch (_) {}
-
-      setTimeout(function () {
-        var s = document.getElementById("ozSplash");
-        var b = document.getElementById("ozBubble");
-        if (s) s.style.display = "none";
-        if (b) b.style.display = "none";
-      }, 150);
-    })();
-  </script>
 </body>
 </html>
