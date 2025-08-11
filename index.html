@@ -2,55 +2,64 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oz Cleanse Companion</title>
-
-  <!-- Theming -->
-  <meta name="theme-color" content="#ffe5da" />
-  <link rel="icon" type="image/png" href="oz.png" />
-
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Optional: prefetch the avatar used in splash/header -->
-  <link rel="preload" href="oz.png" as="image" />
 </head>
 <body>
-  <!-- Error banner (filled by JS if anything breaks) -->
-  <div id="errorBanner" class="err" role="alert"></div>
 
-  <!-- Splash (visible instantly; fades after oz:ready OR after 1.2s on load) -->
-  <div id="ozSplash" class="splash" aria-live="polite">
+  <!-- Splash screen -->
+  <div id="ozSplash" class="splash">
     <div class="splash-inner">
-      <img id="ozImg" src="oz.png" alt="Oz" />
-      <div id="ozBubble" class="bubble">Loading…</div>
+      <img src="profile.jpg" alt="Profile Picture" />
+      <div class="bubble">Loading your cleanse plan…</div>
     </div>
   </div>
 
-  <!-- App root -->
-  <div class="wrap">
-    <div id="root"></div>
-  </div>
-
-  <!-- No-JS fallback -->
-  <noscript>
-    <div class="wrap">
-      <div class="card" style="margin-top:12px">
-        You need JavaScript enabled to use Oz Cleanse Companion.
+  <!-- Main app -->
+  <header class="mast">
+    <div class="left">
+      <img src="profile.jpg" alt="Profile" />
+      <div class="mast-title">
+        <h1>Oz Companion</h1>
+        <span class="phase" id="phaseLabel">FAST</span>
       </div>
     </div>
-  </noscript>
+    <div class="day-nav">
+      <button id="prevDay" class="day-chip">&#9664;</button>
+      <span class="day-chip" id="dayLabel">Day 1</span>
+      <button id="nextDay" class="day-chip">&#9654;</button>
+    </div>
+  </header>
 
-  <!-- Libraries: keep this exact order (no defer) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progressBar"></div>
 
-  <!-- Your app (safe bootstrap inside handles timing) -->
+  <!-- Checklist -->
+  <ul class="checklist" id="checklist">
+    <li><input type="checkbox" /> <span>💧 Drink 120–150 oz water</span></li>
+    <li><input type="checkbox" /> <span>🍵 Tea</span></li>
+    <li><input type="checkbox" /> <span>☕ Coffee</span></li>
+    <li><input type="checkbox" /> <span>🧂 Electrolytes</span></li>
+    <li><input type="checkbox" /> <span>🏃‍♂️ Exercise</span></li>
+    <li><input type="checkbox" /> <span>🐾👣 Weight check-in</span></li>
+  </ul>
+
+  <!-- Smart Coach -->
+  <div class="smart-coach" id="smartCoach">
+    <h2>🧠 Smart Coach</h2>
+    <p>Tap to analyze your note and get relief + motivation</p>
+  </div>
+
+  <!-- Navigation bar -->
+  <nav class="navbar">
+    <button>🏠</button>
+    <button>🛒</button>
+    <button>📅</button>
+    <button>📷</button>
+    <button>⚙️</button>
+  </nav>
+
   <script src="app.js"></script>
 </body>
 </html>
