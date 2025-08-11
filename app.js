@@ -1,15 +1,22 @@
-/* Oz Cleanse Companion — V15.1 (stable)
-   - Splash with Oz + rotating affirmation (fade)
-   - Header: avatar + single-line title; phase under title
-   - Smart Coach bullets
-   - Calendar auto-expands cleanse days to 4 juices (1 each)
-   - Tabs: Dashboard, Groceries, Calendar, Photos, Settings
+/* Oz Cleanse Companion — V14.6 (calendar + imports fixed)
+   - Splash with randomized affirmations
+   - Single-row mast: avatar • title • day selector
+   - Phase-aware paw checklist (Fast/Cleanse/Rebuild)
+   - Smart Coach (outputs bullet list; doesn't overwrite note)
+   - Weight input auto-checks "weight" + mini chart
+   - Next 2-day ingredients with combined quantities
+   - Photos: day selector + upload in same card; LS saved; affirmation
+   - Calendar: 4 juices per cleanse day + rebuild meals/snacks; badges for notes/photos
+   - Settings: start date; import default plan; ChatGPT import (JSON or text);
+               edit phase checklists; add custom item
+   - Confetti + gentle vibration; floating dock
 */
+
 (function(){
   const e = React.createElement;
   const {useState,useEffect,useRef} = React;
 
-  /* Error banner */
+  /* ----------------- Error Banner ----------------- */
   window.addEventListener("error", (ev) => {
     const box = document.getElementById("errorBanner");
     if (!box) return;
@@ -19,7 +26,7 @@
     if (s) s.style.display = "none";
   });
 
-  /* Helpers */
+  /* ----------------- Helpers ----------------- */
   function useLocal(key, initial) {
     const [val, setVal] = useState(() => {
       try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : initial; }
@@ -46,35 +53,53 @@
     }catch{ return AFFS[0]; }
   }
 
-  /* Plan data */
-  const CLEANSE_TEMPLATES = [
-    { baseId:"green",  name:"Green Juice",   type:"juice" },
-    { baseId:"carrot", name:"Carrot-Apple",  type:"juice" },
-    { baseId:"beet",   name:"Beet-Citrus",   type:"juice" },
-    { baseId:"ginger", name:"Citrus-Ginger", type:"juice" },
-  ];
-  const PLAN_RECIPES = [
-    { id:"d4-green",  name:"Green Juice",   type:"juice", day:4, servings:1, ingredients:[{name:"Spinach",qty:"2 cup"}] },
-    { id:"d5-carrot", name:"Carrot-Apple",  type:"juice", day:5, servings:1, ingredients:[{name:"Carrots",qty:"6"}] },
-    { id:"d6-beet",   name:"Beet-Citrus",   type:"juice", day:6, servings:1, ingredients:[{name:"Beets",qty:"2"}] },
-    { id:"d7-ginger", name:"Citrus-Ginger", type:"juice", day:7, servings:1, ingredients:[{name:"Ginger",qty:'1"'}] },
-  ];
-
-  const GOAL_LABELS = {
-    water:"💧 Drink 120–150 oz water", tea:"🍵 Tea", coffee:"☕ Coffee", lmnt:"🧂 Electrolytes",
-    exercise:"🏃 Exercise", wholefood:"🥗 Whole food meals", weight:"👣 Weight check-in", juices:"🧃 Juices"
-  };
-  const DEFAULT_PHASE_TEMPLATES = {
-    fast:["water","tea","coffee","lmnt","exercise","weight"],
-    cleanse:["water","tea","coffee","juices","lmnt","exercise","weight"],
-    rebuild:["water","lmnt","exercise","wholefood","weight"]
-  };
-  function defaultDays(){
-    const phases=["fast","fast","fast","cleanse","cleanse","cleanse","cleanse","rebuild","rebuild","rebuild","rebuild"];
-    return phases.map((ph,i)=>({day:i+1, phase:ph, checks:{}, note:"", weight:null, photos:[]}));
+  /* ------------ Units: combine quantities (cup base) ------------ */
+  function parseQty(raw){
+    if(!raw) return null;
+    let s=String(raw).toLowerCase().trim()
+      .replace(/cups?/g,"cup").replace(/tablespoons?|tbsp?s?/g,"tbsp")
+      .replace(/teaspoons?|tsps?/g,"tsp").replace(/ounces?|oz/g,"oz");
+    const m = s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(\.\d+)?)(?:\s*([a-z"]+))?/i);
+    if(!m) return null;
+    const num = m[1].includes("/")
+      ? m[1].split(" ").reduce((a,b)=> b.includes("/") ? a + (parseFloat(b.split("/")[0]) / parseFloat(b.split("/")[1])) : a + parseFloat(b), 0)
+      : parseFloat(m[1]);
+    const unit = (m[3]||"").replace(/"/g,"in"); // treat 1" ginger as unknown unit
+    return {n:num, u:unit};
+  }
+  function toCup(q){
+    if(!q) return null;
+    const u=q.u;
+    if(u==="tsp") return {n:q.n/48,u:"cup"};
+    if(u==="tbsp")return {n:q.n/16,u:"cup"};
+    if(u==="oz")  return {n:q.n/8,u:"cup"};
+    if(u===""||u==="cup")return {n:q.n,u:"cup"};
+    return {n:q.n,u:u}; // unknown; passthrough
+  }
+  function fromCup(n,u){
+    if(u!=="cup") return (Number.isInteger(n)?n:n.toFixed(2))+" "+u;
+    if(n>=1) return (Number.isInteger(n)?n:n.toFixed(2))+" cup";
+    const tbsp=n*16; if(tbsp>=1) return (Number.isInteger(tbsp)?tbsp:tbsp.toFixed(1))+" tbsp";
+    const tsp=tbsp*3; return (Number.isInteger(tsp)?tsp:tsp.toFixed(1))+" tsp";
+  }
+  function combineQtyStrings(list){
+    const parsed=list.map(parseQty).filter(Boolean);
+    if(!parsed.length) return list.join(" + ");
+    const cups=parsed.map(toCup);
+    const convertible=cups.filter(x=>x.u==="cup");
+    const others=cups.filter(x=>x.u!=="cup");
+    let out=[];
+    if(convertible.length){
+      const sum=convertible.reduce((a,b)=>a+b.n,0);
+      out.push(fromCup(sum,"cup"));
+    }
+    if(others.length){
+      out=out.concat(others.map(x=>(x.n+" "+x.u).trim()));
+    }
+    return out.join(" + ");
   }
 
-  /* Splash */
+  /* ------------ Splash: random bubble text then fade ------------ */
   (function(){
     const bubble = document.getElementById("ozBubble");
     if (bubble) bubble.textContent = nextAff();
@@ -88,7 +113,94 @@
     });
   })();
 
-  /* Components */
+  /* ------------ Plan recipes (juices + rebuild meals) ------------ */
+
+  // Cleanse juice set (reused each cleanse day)
+  const CLEANSE_JUICES = [
+    { baseId:"j-green",  name:"Green Juice" },
+    { baseId:"j-carrot", name:"Carrot-Apple" },
+    { baseId:"j-beet",   name:"Beet-Citrus" },
+    { baseId:"j-ginger", name:"Citrus-Ginger" }
+  ];
+  // expands 4-juice set to each cleanse day
+  function expandCleanseDays(daysArr){
+    const out = [];
+    daysArr.forEach(dayNum=>{
+      CLEANSE_JUICES.forEach(j=>{
+        out.push({
+          id: `${j.baseId}-d${dayNum}`,
+          name: j.name, type: "juice", day: dayNum, servings: 1, ingredients:[]
+        });
+      });
+    });
+    return out;
+  }
+
+  // FULL DEFAULT PLAN
+  const PLAN_RECIPES = [
+    ...expandCleanseDays([4,5,6,7]),
+
+    // Rebuild — Day 8 & 9
+    { id:"r-smoothie-8", name:"Smoothie Breakfast", type:"meal", day:8,
+      ingredients:[{name:"Banana",qty:"1"},{name:"Spinach",qty:"2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Chia seeds",qty:"1 tbsp"}] },
+    { id:"r-smoothie-9", name:"Smoothie Breakfast", type:"meal", day:9,
+      ingredients:[{name:"Banana",qty:"1"},{name:"Spinach",qty:"2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Chia seeds",qty:"1 tbsp"}] },
+
+    { id:"r-steamveg-8", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:8,
+      ingredients:[{name:"Zucchini",qty:"1"},{name:"Carrots",qty:"1 cup"},{name:"Cucumber",qty:"1"},{name:"Spinach",qty:"2 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}] },
+    { id:"r-steamveg-9", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:9,
+      ingredients:[{name:"Zucchini",qty:"1"},{name:"Carrots",qty:"1 cup"},{name:"Cucumber",qty:"1"},{name:"Spinach",qty:"2 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}] },
+
+    { id:"r-lentil-8", name:"Lentil Soup", type:"meal", day:8,
+      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}] },
+    { id:"r-lentil-9", name:"Lentil Soup", type:"meal", day:9,
+      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}] },
+
+    { id:"s-snacks-8", type:"snack", day:8, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
+      ingredients:[{name:"Melon",qty:"1"},{name:"Grapes",qty:"2 cup"},{name:"Peaches",qty:"3"},{name:"Coconut yogurt",qty:"2 cup"},{name:"Chia seeds",qty:"3 tbsp"},{name:"Almond milk",qty:"1 cup"}] },
+    { id:"s-snacks-9", type:"snack", day:9, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
+      ingredients:[{name:"Melon",qty:"1"},{name:"Grapes",qty:"2 cup"},{name:"Peaches",qty:"3"},{name:"Coconut yogurt",qty:"2 cup"},{name:"Chia seeds",qty:"3 tbsp"},{name:"Almond milk",qty:"1 cup"}] },
+
+    // Rebuild — Day 10 & 11
+    { id:"r-oats-10", name:"Overnight Oats Breakfast", type:"meal", day:10,
+      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}] },
+    { id:"r-oats-11", name:"Overnight Oats Breakfast", type:"meal", day:11,
+      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}] },
+
+    { id:"r-quinoa-10", name:"Quinoa Salad", type:"meal", day:10,
+      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},{name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}] },
+    { id:"r-quinoa-11", name:"Quinoa Salad", type:"meal", day:11,
+      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},{name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}] },
+
+    { id:"r-protein-10", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:10,
+      ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}] },
+    { id:"r-protein-11", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:11,
+      ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}] },
+
+    { id:"s-snacks-10", type:"snack", day:10, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
+      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}] },
+    { id:"s-snacks-11", type:"snack", day:11, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
+      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}] }
+  ];
+
+  /* ------------ Phase templates & goals ------------ */
+  const GOAL_LABELS = {
+    water:"💧 Drink 120–150 oz water", tea:"🍵 Tea", coffee:"☕ Coffee", lmnt:"🧂 Electrolytes",
+    exercise:"🏃 Exercise", wholefood:"🥗 Whole food meals", weight:"👣 Weight check-in", juices:"🧃 Juices"
+  };
+  const DEFAULT_PHASE_TEMPLATES = {
+    fast:["water","tea","coffee","lmnt","exercise","weight"],
+    cleanse:["water","tea","coffee","juices","lmnt","exercise","weight"],
+    rebuild:["water","lmnt","exercise","wholefood","weight"]
+  };
+
+  function defaultDays(){
+    const phases=["fast","fast","fast","cleanse","cleanse","cleanse","cleanse","rebuild","rebuild","rebuild","rebuild"];
+    return phases.map((ph,i)=>({day:i+1, phase:ph, checks:{}, note:"", weight:null, photos:[]}));
+  }
+
+  /* ------------ App Components ------------ */
+
   const Progress = ({value}) => e("div",{className:"prog"}, e("i",{style:{width:Math.max(0,Math.min(100,value))+"%"}}));
 
   const Checklist = ({ items, state, onToggle }) =>
@@ -104,7 +216,7 @@
   const WeightChart = ({series}) => {
     const ref=useRef(null), chartRef=useRef(null);
     useEffect(()=>{
-      const ctx=ref.current?.getContext("2d"); if(!ctx) return;
+      const ctx=ref.current.getContext("2d");
       if(chartRef.current) try{ chartRef.current.destroy(); }catch{}
       chartRef.current=new Chart(ctx,{
         type:"line",
@@ -119,7 +231,6 @@
     return e("div",{style:{height:180}}, e("canvas",{ref}));
   };
 
-  /* Pages */
   function Dashboard({days,setDays,templates,goals,recipes}){
     const [idx,setIdx]=useState(0);
     const day=days[idx]||days[0];
@@ -145,33 +256,64 @@
         d.checks={...(d.checks||{}), [id]: !d.checks?.[id]}; n[idx]=d; return n; });
     }
 
-    // Smart Coach (bullets)
-    const [coach,setCoach]=useState(null);
+    // Smart Coach
+    const [coachText,setCoachText]=useState("");
     function runCoach(){
       const txt=(day.note||"").toLowerCase();
-      if(!txt) { setCoach({header:"Write a quick note below, then tap Smart Coach.", tips:[], boost:""}); return; }
+      if(!txt) { setCoachText("Write a quick note below, then tap Smart Coach."); return;}
       const found=new Set();
       if(/headache|migraine|head pain/.test(txt)) found.add("headache");
       if(/dizzy|light.?headed|vertigo/.test(txt))   found.add("dizziness");
       if(/nausea|queasy|sick to (my|the) stomach/.test(txt)) found.add("nausea");
       if(/tired|fatigue|exhaust/.test(txt))         found.add("fatigue");
       if(/hungry|crav(ing|es)/.test(txt))           found.add("hunger");
-      const tipsMap={
+
+      const tips={
         headache:["12–16 oz water + LMNT","Dim screens 5–10 min","Slow nasal breathing (in 4 / out 6)"],
         dizziness:["Sit until steady","Small juice or pinch of salt","Slow breaths"],
         nausea:["Peppermint/ginger tea","Cool water sips","Fresh air"],
         fatigue:["15–20 min rest","Hydrate / electrolytes","2-min stretch"],
         hunger:["Water first","Sip scheduled juice slowly","5-min walk as reset"]
       };
-      const tips=[...found].flatMap(k=>tipsMap[k]||[]).slice(0,7);
+      const picked=[...found].flatMap(k=>tips[k]||[]).slice(0,7);
       const mood = /proud|better|good|calm|motivated/.test(txt) ? "up" :
                    /overwhelm|anxious|stressed|down|frustrat/.test(txt) ? "low" : "mid";
       const boost = mood==="low" ? "You’re not alone—make today gentle." :
                      mood==="mid" ? "Nice work staying steady. One tiny upgrade today." :
                      "Ride the wave, stay kind to yourself.";
       const header = found.size ? `I noticed: ${[...found].join(", ")}.` : "No specific symptoms spotted — here’s a steady plan.";
-      setCoach({header,tips,boost});
+      const body = picked.length ? "Try:\n• " + picked.join("\n• ") : "Hydrate, 5 slow breaths, short walk, then reassess.";
+      setCoachText(`${header}\n\n${body}\n\n${boost}`);
     }
+
+    // Upcoming 2-day ingredients (combined)
+    function nextTwoDayIngredients(current){
+      function gatherFor(daysWanted){
+        const bag={}; // name -> {qtyList:[], days:Set}
+        (recipes||[]).forEach(r=>{
+          if(!r.day || !daysWanted.has(r.day)) return;
+          (r.ingredients||[]).forEach(it=>{
+            const key=(it.name||"").toLowerCase();
+            if(!bag[key]) bag[key]={name:it.name,qtyList:[],days:new Set()};
+            if(it.qty) bag[key].qtyList.push(it.qty);
+            bag[key].days.add(r.day);
+          });
+        });
+        return Object.values(bag).map(x=>({
+          name:x.name, qty:combineQtyStrings(x.qtyList), days:[...x.days].sort((a,b)=>a-b)
+        })).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+      }
+      const d1=current.day, d2=current.day+1;
+      let list = gatherFor(new Set([d1,d2]));
+      if(list.length) return {items:list, label:`Today + Tomorrow — Ingredients`};
+      // fallback: next two recipe days
+      const futureDays=[...new Set((recipes||[]).filter(r=>r.day>=current.day).map(r=>r.day))].sort((a,b)=>a-b).slice(0,2);
+      list=gatherFor(new Set(futureDays));
+      const label = futureDays.length===2 ? `Upcoming Ingredients — Day ${futureDays[0]} & ${futureDays[1]}` :
+                                            futureDays.length===1 ? `Upcoming Ingredients — Day ${futureDays[0]}` : `Upcoming Ingredients`;
+      return {items:list, label};
+    }
+    const nxt = nextTwoDayIngredients(day);
 
     const weightSeries = days.map(d=> d.weight==null ? null : d.weight);
 
@@ -185,8 +327,10 @@
           )
         ),
         e("div",{className:"day-nav"},
-          e("button",{className:"btn",onClick:()=>changeDay(-1),"aria-label":"Previous day"},"◀"),
-          e("div",{className:"day-chip"}, e("div",{style:{fontWeight:800}},"Day ", day.day)),
+          e("button",{className:"btn",onClick:()=>changeDay(-1),"aria-label":"Prev day"},"◀"),
+          e("div",{className:"day-chip"},
+            e("div",{style:{fontWeight:800}}, "Day ", day.day)
+          ),
           e("button",{className:"btn",onClick:()=>changeDay(1),"aria-label":"Next day"},"▶")
         )
       ),
@@ -203,17 +347,24 @@
           e("span",{className:"badge"},"🧠 Smart Coach"),
           e("div",{style:{marginTop:6,color:"var(--muted)"}}, "Tap to analyze your note and get relief + motivation")
         ),
-        coach && e("div",{className:"coachOut"},
-          e("div",{style:{fontWeight:700, marginBottom:6}}, coach.header),
-          (coach.tips && coach.tips.length)
-            ? e("ul",{style:{margin:"0 0 8px 18px"}}, coach.tips.map((t,i)=> e("li",{key:i}, t)))
-            : e("div",{style:{color:"var(--muted)", marginBottom:6}}, "Hydrate, 5 slow breaths, short walk, then reassess."),
-          e("div",{style:{color:"var(--muted)"}}, coach.boost)
-        ),
+        coachText && e("div",{className:"coachOut"}, coachText),
         e("textarea",{className:"noteArea", placeholder:"Notes…",
           value:day.note||"",
           onChange:(ev)=> setDays(prev=>{ const n=prev.slice(); const d={...n[idx]}; d.note=ev.target.value; n[idx]=d; return n; })
         })
+      ),
+
+      e("div",{className:"card",style:{marginTop:12}},
+        e("h2",null, nxt.label),
+        !nxt.items.length ? e("p",{style:{color:"var(--muted)"}}, "No recipes scheduled soon.")
+        : e("ul",{style:{listStyle:"none",padding:0,marginTop:8}},
+            nxt.items.map(it=> e("li",{key:it.name, className:"row", style:{justifyContent:"space-between",borderBottom:"1px solid var(--line)",padding:"6px 0"}},
+              e("span",null, it.name, " ",
+                e("span",{className:"badge"}, it.days.length===1 ? ("Day "+it.days[0]) : ("Day "+it.days[0]+"–"+it.days[it.days.length-1]))
+              ),
+              e("span",{style:{color:"var(--muted)",fontSize:13}}, it.qty||"")
+            ))
+          )
       ),
 
       e("div",{className:"card",style:{marginTop:12}},
@@ -236,66 +387,10 @@
     );
   }
 
-  function Calendar({ days, recipes, settings }) {
-    function dateFor(dayNum) {
-      const dstr = settings.startDate || "";
-      if (!dstr) return null;
-      const base = new Date(dstr + "T00:00:00");
-      if (isNaN(base)) return null;
-      const dt = new Date(base.getTime() + (dayNum - 1) * 86400000);
-      return dt.toLocaleDateString();
-    }
-    function expandCleanseDay(list, d) {
-      if ((d.phase||"") !== "cleanse") return list;
-      const byName = new Map(list.map(r => [r.name, r]));
-      CLEANSE_TEMPLATES.forEach(t=>{
-        if(!byName.has(t.name)){
-          byName.set(t.name, { id:`auto-${d.day}-${t.baseId}`, name:t.name, type:"juice", day:d.day, servings:1 });
-        }
-      });
-      return Array.from(byName.values());
-    }
-
-    return e("div", { className: "card" },
-      e("h2", null, "Calendar"),
-      e("ul", { style: { listStyle: "none", padding: 0, margin: 0 } },
-        days.map(d => {
-          let list = (recipes || []).filter(r => r.day === d.day);
-          list = expandCleanseDay(list, d);
-
-          const hasPhotos = !!(d.photos && d.photos.length);
-          const hasNote = !!(d.note && d.note.trim().length);
-          const dd = dateFor(d.day);
-
-          return e("li", { key: d.day, className: "card", style: { padding: "12px", marginTop: 10 } },
-            e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
-              e("div", null,
-                e("div", { style: { fontWeight: 800 } }, "Day ", d.day, " — ", (d.phase || "").toUpperCase()),
-                dd && e("div", { className: "badge", style: { marginTop: 6 } }, dd)
-              ),
-              e("div", { className: "row", style: { minHeight: 24, flexWrap: "wrap", gap: 6 } },
-                list.length
-                  ? list.map(r =>
-                      e("span", { key: r.id, className: "badge" },
-                        (r.type === "juice" ? "🧃 " : (r.type === "snack" ? "🍎 " : "🍽️ ")),
-                        r.name
-                      )
-                    )
-                  : e("span", { style: { fontSize: 12, color: "var(--muted)" } }, "—"),
-                hasNote && e("span", { className: "badge" }, "📝 Note"),
-                hasPhotos && e("span", { className: "badge" }, "📸 Photos")
-              )
-            )
-          );
-        })
-      )
-    );
-  }
-
   function Groceries({groceries,setGroceries}){
     return e("div",{className:"card"},
       e("h2",null,"Groceries & Prices"),
-      !groceries?.length ? e("p",{style:{color:"var(--muted)"}}, "No grocery items yet.")
+      !groceries.length ? e("p",{style:{color:"var(--muted)"}}, "No grocery items yet.")
       : e("ul",{style:{listStyle:"none",padding:0}},
           groceries.map((g,idx)=> e("li",{key:g.id, className:"row", style:{padding:"8px 0",borderBottom:"1px solid var(--line)"}},
             e("button",{className:"paw"+(g.checked?" on":""), onClick:()=> setGroceries(prev=> prev.map((x,i)=> i===idx? {...x,checked:!x.checked} : x ))}, g.checked?"🐾":""),
@@ -346,6 +441,105 @@
     );
   }
 
+  function Calendar({ days, recipes, settings }) {
+    function dateFor(dayNum) {
+      const dstr = settings.startDate || "";
+      if (!dstr) return null;
+      const base = new Date(dstr + "T00:00:00");
+      if (isNaN(base)) return null;
+      const dt = new Date(base.getTime() + (dayNum - 1) * 86400000);
+      return dt.toLocaleDateString();
+    }
+
+    return e("div", { className: "card" },
+      e("h2", null, "Calendar"),
+      e("ul", { style: { listStyle: "none", padding: 0, margin: 0 } },
+        days.map(d => {
+          const list = (recipes || []).filter(r => r.day === d.day);
+          const hasPhotos = !!(d.photos && d.photos.length);
+          const hasNote = !!(d.note && d.note.trim().length);
+          const dd = dateFor(d.day);
+
+          return e("li", { key: d.day, className: "card", style: { padding: "12px", marginTop: 10 } },
+            e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
+              // Left: day + phase + optional date
+              e("div", null,
+                e("div", { style: { fontWeight: 800 } }, "Day ", d.day, " — ", (d.phase || "").toUpperCase()),
+                dd && e("div", { className: "badge", style: { marginTop: 6 } }, dd)
+              ),
+              // Right: recipes + note/photo badges
+              e("div", { className: "row", style: { minHeight: 24, flexWrap: "wrap", gap: 6 } },
+                list.length
+                  ? list.map(r =>
+                      e("span", { key: r.id, className: "badge" },
+                        (r.type === "juice" ? "🧃 " : (r.type === "snack" ? "🍎 " : "🍽️ ")),
+                        r.name
+                      )
+                    )
+                  : e("span", { style: { fontSize: 12, color: "var(--muted)" } }, "—"),
+                hasNote && e("span", { className: "badge" }, "📝 Note"),
+                hasPhotos && e("span", { className: "badge" }, "📸 Photos")
+              )
+            )
+          );
+        })
+      )
+    );
+  }
+
+  /* ------------ Grocery aggregation (from recipes) ------------ */
+  function aggregateGroceries(recipes){
+    const map={};
+    (recipes||[]).forEach(r=>{
+      (r.ingredients||[]).forEach(it=>{
+        const id=(it.name||"").toLowerCase().replace(/\s+/g,"-");
+        if(!map[id]) map[id]={id,name:it.name, qtyList:[], checked:false, estCost:null, days: new Set()};
+        if(it.qty) map[id].qtyList.push(it.qty);
+        if(r.day) map[id].days.add(r.day);
+      });
+    });
+    return Object.values(map).map(g=>({
+      id:g.id, name:g.name, qty:combineQtyStrings(g.qtyList),
+      checked:g.checked, estCost:g.estCost, days:[...g.days].sort((a,b)=>a-b)
+    })).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  }
+
+  /* ------------ Parse free-text plan (improved) ------------ */
+  function parseFreeTextPlan(text){
+    const days=defaultDays(); const recipes=[];
+    const lines=String(text||"").split(/\r?\n/);
+    let curDay=null, cur=null;
+
+    lines.forEach(raw=>{
+      const line=raw.trim();
+      if(!line) return;
+
+      const mDay=line.match(/^day\s+(\d+)/i);
+      if(mDay){ curDay=+mDay[1]; cur=null; return; }
+
+      const mJ=line.match(/^juice(?:\s*\d*)?\s*[-:]\s*(.+)$/i);
+      const mM=line.match(/^(breakfast|lunch|dinner|meal|snack)\s*[-:]\s*(.+)$/i);
+      if((mJ||mM) && curDay){
+        const name=(mJ?mJ[1]:mM[2]).trim();
+        const type = mJ ? "juice" : (mM[1].toLowerCase()==="snack" ? "snack" : "meal");
+        cur={id:"r-"+Math.random().toString(36).slice(2), name, type, day:curDay, ingredients:[]};
+        recipes.push(cur); return;
+      }
+
+      const ing=line.match(/^[•\-]\s*(.+)$/);
+      if(ing && cur){
+        const rawI=ing[1];
+        const qty = (rawI.match(/^([\d/.\s]+[a-zA-Z"]*)/)||[])[1] || "";
+        const name = rawI.replace(/^([\d/.\s]+[a-zA-Z"]*)\s+/,"");
+        cur.ingredients.push({name, qty});
+      }
+    });
+
+    if(!recipes.length) throw new Error("No recipes parsed");
+    return {days,recipes};
+  }
+
+  /* ------------ Settings ------------ */
   function Settings({settings,setSettings,goals,setGoals,templates,setTemplates,setDays,setRecipes,setGroceries}){
     const [show,setShow]=useState(false);
     const [phase,setPhase]=useState("fast");
@@ -374,11 +568,56 @@
       setGoals(prev=> ({...prev,[id]:label}) );
       setChecked(prev=> ({...prev,[id]:true}) );
     }
+
     function importDefault(){
-      setDays(defaultDays());
+      const confirmReset = confirm("Import the default 11-day plan? This will replace current days/recipes.");
+      if(!confirmReset) return;
+      const newDays = defaultDays();
+      setDays(newDays);
       setRecipes(PLAN_RECIPES);
       setGroceries(aggregateGroceries(PLAN_RECIPES));
-      alert("Default 11-day plan imported.");
+      alert("Default 11-day plan imported ✔");
+    }
+
+    function importFromChatGPT(){
+      const txt = prompt(
+`Paste plan here.
+
+Accepted formats:
+1) JSON with { "recipes":[...], "days":[...] }  OR { "recipes":[...] }.
+2) Plain text, e.g.:
+Day 4
+Juice - Green Juice
+Juice - Carrot-Apple
+Breakfast - Smoothie
+• Banana 1
+• Spinach 2 cup`
+      );
+      if(!txt) return;
+
+      // Try JSON
+      try{
+        const obj = JSON.parse(txt);
+        if(Array.isArray(obj.recipes)){
+          const newDays = Array.isArray(obj.days) && obj.days.length ? obj.days : defaultDays();
+          setDays(newDays);
+          setRecipes(obj.recipes);
+          setGroceries(aggregateGroceries(obj.recipes));
+          alert("Plan imported from JSON ✔");
+          return;
+        }
+      }catch{/* fall back */}
+
+      // Fallback text
+      try{
+        const parsed = parseFreeTextPlan(txt);
+        setDays(parsed.days);
+        setRecipes(parsed.recipes);
+        setGroceries(aggregateGroceries(parsed.recipes));
+        alert("Plan imported from text ✔");
+      }catch{
+        alert("Couldn’t parse. Try JSON with a 'recipes' array.");
+      }
     }
 
     return e("div",{className:"card"},
@@ -389,11 +628,10 @@
           e("input",{type:"date",value:(settings.startDate||""), onChange:(ev)=> setSettings(prev=>({...prev,startDate:ev.target.value||null})) })
         ),
         e("div",null,
-          e("div",{style:{fontSize:12,marginBottom:4}},"Quick actions"),
+          e("div",{style:{fontSize:12,marginBottom:4}},"Import plan"),
           e("div",{className:"row"},
-            e("button",{className:"btn primary",onClick:importDefault},"Import default plan"),
-            e("button",{className:"btn",onClick:()=>alert('Use the ChatGPT import you had if needed.')},
-              "ChatGPT import")
+            e("button",{className:"btn primary",onClick:importDefault},"Default 11-day"),
+            e("button",{className:"btn",onClick:importFromChatGPT},"From ChatGPT")
           )
         )
       ),
@@ -428,24 +666,7 @@
     );
   }
 
-  /* Aggregation + utils */
-  function aggregateGroceries(recipes){
-    const map={};
-    (recipes||[]).forEach(r=>{
-      (r.ingredients||[]).forEach(it=>{
-        const id=(it.name||"").toLowerCase().replace(/\s+/g,"-");
-        if(!map[id]) map[id]={id,name:it.name, qtyList:[], checked:false, estCost:null, days: new Set()};
-        if(it.qty) map[id].qtyList.push(it.qty);
-        if(r.day) map[id].days.add(r.day);
-      });
-    });
-    return Object.values(map).map(g=>({
-      id:g.id, name:g.name, qty:g.qtyList?.join(" + ")||"",
-      checked:g.checked, estCost:g.estCost, days:[...g.days].sort((a,b)=>a-b)
-    })).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
-  }
-
-  /* App */
+  /* ------------ App ------------ */
   function App(){
     const [goals,setGoals]=useLocal("oz.goals", GOAL_LABELS);
     const [templates,setTemplates]=useLocal("oz.templates", DEFAULT_PHASE_TEMPLATES);
@@ -455,7 +676,9 @@
     const [groceries,setGroceries]=useLocal("oz.groceries", aggregateGroceries(PLAN_RECIPES));
     const [tab,setTab]=useState("dash");
 
-    useEffect(()=>{ setGroceries(aggregateGroceries(recipes)); },[recipes,setGroceries]);
+    useEffect(()=>{ // ensure grocery list follows recipes
+      setGroceries(aggregateGroceries(recipes));
+    },[recipes,setGroceries]);
 
     return e(React.Fragment,null,
       tab==="dash"     && e(Dashboard,{days,setDays,templates,goals,recipes}),
@@ -466,16 +689,16 @@
 
       e("nav",{className:"tabs"},
         [
-          {id:"dash",icon:"🏠", label:"home"},
-          {id:"groceries",icon:"🛒", label:"groceries"},
-          {id:"calendar",icon:"📅", label:"calendar"},
-          {id:"photos",icon:"📷", label:"progress photos"},
-          {id:"settings",icon:"⚙️", label:"settings"}
-        ].map(t=> e("button",{key:t.id,className:"btn"+(tab===t.id?" primary":""),onClick:()=>setTab(t.id),"aria-label":t.label}, t.icon))
+          {id:"dash",icon:"🏠"},{id:"groceries",icon:"🛒"},
+          {id:"calendar",icon:"📅"},{id:"photos",icon:"📷"},
+          {id:"settings",icon:"⚙️"}
+        ].map(t=> e("button",{key:t.id,className:"btn"+(tab===t.id?" primary":""),onClick:()=>setTab(t.id),"aria-label":t.id}, t.icon))
       )
     );
   }
 
   ReactDOM.createRoot(document.getElementById("root")).render(e(App));
 })();
+
+// After your React app mounts:
 document.dispatchEvent(new Event('oz:ready'));
