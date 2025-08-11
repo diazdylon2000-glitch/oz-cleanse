@@ -3,23 +3,29 @@
   const e = React.createElement;
   const { useState, useEffect, useMemo, useRef } = React;
 
-  /* ---------- Splash ---------- */
-  const AFFS = [
+/* ---------- Splash bootstrap (safe) ---------- */
+(function initSplash(){
+  var lines = [
     "Hydration is happiness 🐾","Strong body, calm mind","Small habits, big change",
     "Progress, not perfection","Sip, breathe, reset","Gentle + consistent + kind",
-    "Future-you says thanks","Your glow is showing ✨","Discipline is self-care",
-    "Body wisdom > old habits","Steady water, bright energy","One step at a time"
+    "Future-you says thanks","Your glow is showing ✨","Discipline is self-care"
   ];
-  (function initSplash(){
-    const line = document.getElementById("splashLine");
-    if(line) line.textContent = AFFS[Math.floor(Math.random()*AFFS.length)];
-    setTimeout(()=>{ const s=document.getElementById("splash"); if(s) s.classList.add("hide"); }, 1300);
-    window.addEventListener("error",(ev)=>{
-      const b=document.getElementById("err");
-      if(b){ b.style.display="block"; b.textContent="Error: "+(ev.error?.message || ev.message); }
-      const s=document.getElementById("splash"); if(s) s.classList.add("hide");
-    });
-  })();
+  var line = document.getElementById("splashLine");
+  if (line) line.textContent = lines[Math.floor(Math.random() * lines.length)];
+
+  function hide() {
+    var s = document.getElementById("splash");
+    if (!s) return;
+    s.classList.add("hide");
+    setTimeout(function(){ s.style.display = "none"; }, 500);
+  }
+
+  // Normal path: after window load, hide quickly
+  window.addEventListener("load", function(){ setTimeout(hide, 900); });
+
+  // Safety: even if load never fires, hide at 3.5s
+  setTimeout(hide, 3500);
+})();
 
   /* ---------- Model / defaults ---------- */
   function defDays(){
