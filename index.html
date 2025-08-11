@@ -2,34 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- keep 16px baseline to avoid iOS input zoom -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Oz Cleanse Companion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Oz Companion</title>
   <link rel="icon" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <!-- error banner -->
-  <div id="errorBanner" class="err" role="alert"></div>
-
-  <!-- Splash (bubble moved inside container so it can sit right next to Oz) -->
-  <div id="ozSplash" class="splash" aria-hidden="true">
-    <div class="splash-inner">
-      <img id="ozImg" src="oz.png" alt="Oz" />
-      <div id="ozBubble" class="bubble">Hydration is happiness 🐾</div>
-    </div>
-  </div>
-
-  <!-- App -->
-  <div id="root"></div>
-
-  <!-- vendor libs -->
+  <!-- libs -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
+</head>
+<body>
+  <!-- splash -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <img src="oz.png" alt="Oz" class="splash-img" />
+      <div id="splashLine" class="splash-line">Loading…</div>
+    </div>
+  </div>
+
+  <!-- error banner -->
+  <div id="errorBanner" class="err" style="display:none"></div>
 
   <!-- app -->
+  <div id="root"></div>
+
   <script src="app.js"></script>
 </body>
 </html>
