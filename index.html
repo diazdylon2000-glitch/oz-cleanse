@@ -4,27 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Oz Companion</title>
+  <meta name="theme-color" content="#ffe4ef" />
   <link rel="icon" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
-  <!-- libs -->
+
+  <!-- React + Chart.js + Confetti -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
 </head>
 <body>
-  <!-- splash -->
+  <!-- Splash -->
   <div id="splash" class="splash">
     <div class="splash-inner">
-      <img src="oz.png" alt="Oz" class="splash-img" />
+      <img class="splash-img" src="oz.png" alt="Oz" />
       <div id="splashLine" class="splash-line">Loading…</div>
     </div>
   </div>
 
-  <!-- error banner -->
-  <div id="errorBanner" class="err" style="display:none"></div>
+  <!-- Error banner (auto-shown on runtime error) -->
+  <div id="err" class="err" style="display:none"></div>
 
-  <!-- app -->
+  <!-- App -->
   <div id="root"></div>
 
   <script src="app.js"></script>
