@@ -424,7 +424,7 @@
         e("div",{className:"left"},
           e("img",{src:"oz.png",alt:"Oz"}),
           e("div",null,
-            e("h1",null,"Oz Companion"),
+            <h1 style={{ whiteSpace: 'nowrap' }}>Oz Companion</h1>
             e("div",{className:"phase"}, day.phase.toUpperCase())
           )
         ),
