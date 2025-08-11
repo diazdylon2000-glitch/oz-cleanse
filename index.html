@@ -28,7 +28,29 @@
 
   <!-- App -->
   <div id="root"></div>
-
+<script>
+  (function () {
+    function hideSplash() {
+      var s = document.getElementById('splash');
+      if (!s) return;
+      s.classList.add('hide');
+      setTimeout(function(){ s.style.display = 'none'; }, 500);
+    }
+    // Never hang: force-hide at 3.5s even if app fails to mount
+    window.addEventListener('DOMContentLoaded', function () {
+      setTimeout(hideSplash, 3500);
+    });
+    // If any runtime error happens, show a banner and hide splash
+    window.addEventListener('error', function (e) {
+      var b = document.getElementById('err');
+      if (b) {
+        b.textContent = 'App error: ' + (e.error && e.error.message ? e.error.message : e.message);
+        b.style.display = 'block';
+      }
+      hideSplash();
+    });
+  })();
+</script>
   <script src="app.js"></script>
 </body>
 </html>
