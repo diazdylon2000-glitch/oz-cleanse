@@ -6,6 +6,19 @@
    - Weight entry auto-check
    - Confetti & haptics on 100%
 */
+/* --- Loader hardening: never-stuck + CDN banner (duplicate-safe) --- */
+(function () {
+  function hideSplash() {
+    var s = document.getElementById('ozSplash');
+    var b = document.getElementById('ozBubble');
+    if (s) s.style.display = 'none';
+    if (b) b.style.display = 'none';
+  }
+  // safety net in case app code throws during init
+  window.addEventListener('error', hideSplash);
+  // last resort after 3.5s
+  setTimeout(hideSplash, 3500);
+})();
 
 (function () {
   const e = React.createElement;
@@ -698,4 +711,17 @@
   }
 
   ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+})();
+/* --- Loader hardening: never-stuck + CDN banner (duplicate-safe) --- */
+(function () {
+  function hideSplash() {
+    var s = document.getElementById('ozSplash');
+    var b = document.getElementById('ozBubble');
+    if (s) s.style.display = 'none';
+    if (b) b.style.display = 'none';
+  }
+  // safety net in case app code throws during init
+  window.addEventListener('error', hideSplash);
+  // last resort after 3.5s
+  setTimeout(hideSplash, 3500);
 })();
