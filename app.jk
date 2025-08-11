@@ -319,35 +319,56 @@ const PLAN_RECIPES = [
         d.checks={...(d.checks||{}), [id]: !d.checks?.[id]}; n[idx]=d; return n; });
     }
 
-    // Smart Coach
-    const [coachText,setCoachText]=useState("");
-    function runCoach(){
-      const txt=(day.note||"").toLowerCase();
-      if(!txt) { setCoachText("Write a quick note below, then tap Smart Coach."); return;}
-      const found=new Set();
-      if(/headache|migraine|head pain/.test(txt)) found.add("headache");
-      if(/dizzy|light.?headed|vertigo/.test(txt))   found.add("dizziness");
-      if(/nausea|queasy|sick to (my|the) stomach/.test(txt)) found.add("nausea");
-      if(/tired|fatigue|exhaust/.test(txt))         found.add("fatigue");
-      if(/hungry|crav(ing|es)/.test(txt))           found.add("hunger");
+   // Smart Coach (structured output: header + tips[] + boost)
+const [coach, setCoach] = React.useState(null);
 
-      const tips={
-        headache:["12–16 oz water + LMNT","Dim screens 5–10 min","Slow nasal breathing (in 4 / out 6)"],
-        dizziness:["Sit until steady","Small juice or pinch of salt","Slow breaths"],
-        nausea:["Peppermint/ginger tea","Cool water sips","Fresh air"],
-        fatigue:["15–20 min rest","Hydrate / electrolytes","2-min stretch"],
-        hunger:["Water first","Sip scheduled juice slowly","5-min walk as reset"]
-      };
-      const picked=[...found].flatMap(k=>tips[k]||[]).slice(0,7);
-      const mood = /proud|better|good|calm|motivated/.test(txt) ? "up" :
-                   /overwhelm|anxious|stressed|down|frustrat/.test(txt) ? "low" : "mid";
-      const boost = mood==="low" ? "You’re not alone—make today gentle." :
-                     mood==="mid" ? "Nice work staying steady. One tiny upgrade today." :
-                     "Ride the wave, stay kind to yourself.";
-      const header = found.size ? `I noticed: ${[...found].join(", ")}.` : "No specific symptoms spotted — here’s a steady plan.";
-      const body = picked.length ? "Try:\n• " + picked.join("\n• ") : "Hydrate, 5 slow breaths, short walk, then reassess.";
-      setCoachText(`${header}\n\n${body}\n\n${boost}`);
-    }
+function runCoach(){
+  const txt = (day.note || "").toLowerCase().trim();
+
+  if(!txt){
+    setCoach({ header: "Write a quick note below, then tap Smart Coach.",
+               tips: [], boost: "" });
+    return;
+  }
+
+  const found = new Set();
+  if(/headache|migraine|head pain/.test(txt)) found.add("headache");
+  if(/dizzy|light.?headed|vertigo/.test(txt)) found.add("dizziness");
+  if(/nausea|queasy|sick to (my|the) stomach/.test(txt)) found.add("nausea");
+  if(/tired|fatigue|exhaust/.test(txt))         found.add("fatigue");
+  if(/hungry|crav(ing|es)/.test(txt))           found.add("hunger");
+
+  const TIPS = {
+    headache:  ["12–16 oz water + LMNT","Dim screens 5–10 min","Slow nasal breathing (in 4 / out 6)"],
+    dizziness: ["Sit until steady","Small juice or pinch of salt","Slow breaths"],
+    nausea:    ["Peppermint/ginger tea","Cool water sips","Fresh air"],
+    fatigue:   ["15–20 min rest","Hydrate / electrolytes","2-min stretch"],
+    hunger:    ["Water first","Sip scheduled juice slowly","5-min walk reset"]
+  };
+
+  // collect all tips (dedup + cap at 8)
+  const tipBag = [];
+  [...found].forEach(k => (TIPS[k]||[]).forEach(t => { if(!tipBag.includes(t)) tipBag.push(t); }));
+  const tips = tipBag.slice(0, 8);
+
+  // simple mood read
+  const mood =
+    /proud|better|good|calm|motivated|strong/.test(txt) ? "up" :
+    /overwhelm|anxious|stressed|down|discourag|frustrat/.test(txt) ? "low" : "mid";
+
+  const boost = (mood === "low")
+    ? "You’re not alone—make today gentle. One tiny win now."
+    : (mood === "mid")
+      ? "Nice work staying steady. One small upgrade today."
+      : "Ride the wave. Stay kind to yourself.";
+
+  const header = found.size
+    ? `I noticed: ${[...found].join(", ")}.`
+    : "No specific symptoms spotted — here’s a steady plan.";
+
+  setCoach({ header, tips: (tips.length ? tips : ["Hydrate now", "5 slow breaths", "Short walk"]), boost });
+}
+
 
     // Upcoming 2-day ingredients (combined)
     function nextTwoDayIngredients(current){
@@ -404,18 +425,28 @@ const PLAN_RECIPES = [
         e(Checklist,{items, state:checks, onToggle:toggle})
       ),
 
-      e("div",{className:"card",style:{marginTop:12}},
-        e("div",{className:"coachCard", role:"button", tabIndex:0,
-          onClick:runCoach, onKeyDown:(ev)=>{ if(ev.key==="Enter"||ev.key===" ") runCoach(); }},
-          e("span",{className:"badge"},"🧠 Smart Coach"),
-          e("div",{style:{marginTop:6,color:"var(--muted)"}}, "Tap to analyze your note and get relief + motivation")
-        ),
-        coachText && e("div",{className:"coachOut"}, coachText),
-        e("textarea",{className:"noteArea", placeholder:"Notes…",
-          value:day.note||"",
-          onChange:(ev)=> setDays(prev=>{ const n=prev.slice(); const d={...n[idx]}; d.note=ev.target.value; n[idx]=d; return n; })
-        })
-      ),
+    e("div",{className:"card",style:{marginTop:12}},
+  e("div",{className:"coachCard", role:"button", tabIndex:0,
+    onClick:runCoach, onKeyDown:(ev)=>{ if(ev.key==="Enter"||ev.key===" ") runCoach(); }},
+    e("span",{className:"badge"},"🧠 Smart Coach"),
+    e("div",{style:{marginTop:6,color:"var(--muted)"}}, "Tap to analyze your note and get relief + motivation")
+  ),
+
+  // Structured coach output
+  coach && e("div",{className:"coachOut"},
+    e("div",{style:{fontWeight:700, marginBottom:6}}, coach.header),
+    e("ul",{style:{margin:"6px 0 8px", paddingLeft:18}},
+      (coach.tips||[]).map((t,i)=> e("li",{key:i,style:{marginBottom:4}}, t))
+    ),
+    coach.boost && e("div",{style:{color:"var(--muted)"}}, coach.boost)
+  ),
+
+  e("textarea",{className:"noteArea", placeholder:"Notes…",
+    value:day.note||"",
+    onChange:(ev)=> setDays(prev=>{ const n=prev.slice(); const d={...n[idx]}; d.note=ev.target.value; n[idx]=d; return n; })
+  })
+),
+
 
       e("div",{className:"card",style:{marginTop:12}},
         e("h2",null, nxt.label),
