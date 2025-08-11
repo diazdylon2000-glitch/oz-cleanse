@@ -54,45 +54,135 @@
     }catch{ return AFFS[0]; }
   }
 
-  /* ------------ Plan recipes (juices + rebuild meals) ------------ */
-  const PLAN_RECIPES = [
-    { id:"r-melon",  name:"Melon Mint Morning", type:"juice", day:4, servings:1,
-      ingredients:[{name:"Melon",qty:"1"},{name:"Mint",qty:"1/2 cup"},{name:"Lime",qty:"1"}]
-    },
-    { id:"r-peach",  name:"Peachy Green Glow", type:"juice", day:5, servings:1,
-      ingredients:[{name:"Peaches",qty:"3"},{name:"Cucumbers",qty:"2"},{name:"Spinach",qty:"4 cup"},{name:"Lemon",qty:"1"}]
-    },
-    { id:"r-carrot", name:"Carrot Apple Ginger", type:"juice", day:6, servings:1,
-      ingredients:[{name:"Carrots",qty:"7"},{name:"Apples",qty:"2"},{name:"Ginger",qty:'1"'},
-                   {name:"Lemon",qty:"1"}]
-    },
-    { id:"r-grape",  name:"Grape Romaine Cooler", type:"juice", day:7, servings:1,
-      ingredients:[{name:"Grapes",qty:"3 cup"},{name:"Romaine",qty:"3 cup"},{name:"Cucumbers",qty:"2"},{name:"Lemon",qty:"1"}]
-    },
-    // Rebuild (examples)
-    { id:"r-smoothie", name:"Smoothie Breakfast", type:"meal", day:8,
-      ingredients:[{name:"Spinach",qty:"2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Chia",qty:"1 tbsp"}]
-    },
-    { id:"r-lentil", name:"Lentil Soup", type:"meal", day:8,
-      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/4"}]
-    },
-    { id:"r-broth9", name:"Simple Veg Broth", type:"meal", day:9,
-      ingredients:[{name:"Carrots",qty:"2"},{name:"Celery",qty:"2 stalks"},{name:"Onion",qty:"1/2"},{name:"Parsley",qty:"few sprigs"}]
-    },
-    { id:"r-sweetpot9", name:"Baked Sweet Potato Bowl", type:"meal", day:9,
-      ingredients:[{name:"Sweet potatoes",qty:"2"},{name:"Spinach",qty:"2 cup"},{name:"Olive oil",qty:"1 tbsp"}]
-    },
-    { id:"r-oats", name:"Overnight Oats", type:"meal", day:10,
-      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"}]
-    },
-    { id:"r-quinoa", name:"Quinoa Salad", type:"meal", day:10,
-      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
-                   {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
-    },
-    { id:"r-protein", name:"Protein + Broccoli", type:"meal", day:11,
-      ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
-    }
-  ];
+// --- Rebuild-ready default plan (juices + meals + snacks) ---
+const PLAN_RECIPES = [
+  // CLEANSE JUICES (same as before)
+  { id:"r-melon",  name:"Melon Mint Morning", type:"juice", day:4, servings:1,
+    ingredients:[{name:"Melon",qty:"1"},{name:"Mint",qty:"1/2 cup"},{name:"Lime",qty:"1"}]
+  },
+  { id:"r-peach",  name:"Peachy Green Glow", type:"juice", day:5, servings:1,
+    ingredients:[{name:"Peaches",qty:"3"},{name:"Cucumbers",qty:"2"},{name:"Spinach",qty:"4 cup"},{name:"Lemon",qty:"1"}]
+  },
+  { id:"r-carrot", name:"Carrot Apple Ginger", type:"juice", day:6, servings:1,
+    ingredients:[{name:"Carrots",qty:"7"},{name:"Apples",qty:"2"},{name:"Ginger",qty:'1"'},{name:"Lemon",qty:"1"}]
+  },
+  { id:"r-grape",  name:"Grape Romaine Cooler", type:"juice", day:7, servings:1,
+    ingredients:[{name:"Grapes",qty:"3 cup"},{name:"Romaine",qty:"3 cup"},{name:"Cucumbers",qty:"2"},{name:"Lemon",qty:"1"}]
+  },
+
+  // ===================== REBUILD — Day 8 & 9 (Phase "rebuild") =====================
+  // Breakfast: Smoothie (banana + spinach + almond milk + chia)
+  { id:"r-smoothie-8", name:"Smoothie Breakfast", type:"meal", day:8,
+    ingredients:[
+      {name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+      {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}
+    ]
+  },
+  { id:"r-smoothie-9", name:"Smoothie Breakfast", type:"meal", day:9,
+    ingredients:[
+      {name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+      {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}
+    ]
+  },
+
+  // Lunch: Steamed veg (zucchini, carrots, cucumber, spinach) + olive oil + lemon
+  { id:"r-steamveg-8", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:8,
+    ingredients:[
+      {name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"},
+      {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+      {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}
+    ]
+  },
+  { id:"r-steamveg-9", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:9,
+    ingredients:[
+      {name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"},
+      {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+      {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}
+    ]
+  },
+
+  // Dinner: Lentil soup
+  { id:"r-lentil-8", name:"Lentil Soup", type:"meal", day:8,
+    ingredients:[
+      {name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},
+      {name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},
+      {name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}
+    ]
+  },
+  { id:"r-lentil-9", name:"Lentil Soup", type:"meal", day:9,
+    ingredients:[
+      {name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},
+      {name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},
+      {name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}
+    ]
+  },
+
+  // Snacks (Day 8–9): fruit + coconut yogurt + chia pudding
+  { id:"s-snacks-8", type:"snack", day:8, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
+    ingredients:[
+      {name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"},
+      {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}
+    ]
+  },
+  { id:"s-snacks-9", type:"snack", day:9, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
+    ingredients:[
+      {name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"},
+      {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}
+    ]
+  },
+
+  // ===================== REBUILD — Day 10 & 11 =====================
+  // Breakfast: Overnight oats (+ berries + cinnamon)
+  { id:"r-oats-10", name:"Overnight Oats Breakfast", type:"meal", day:10,
+    ingredients:[
+      {name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},
+      {name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}
+    ]
+  },
+  { id:"r-oats-11", name:"Overnight Oats Breakfast", type:"meal", day:11,
+    ingredients:[
+      {name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},
+      {name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}
+    ]
+  },
+
+  // Lunch: Quinoa salad (repeat on 10 & 11)
+  { id:"r-quinoa-10", name:"Quinoa Salad", type:"meal", day:10,
+    ingredients:[
+      {name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
+      {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}
+    ]
+  },
+  { id:"r-quinoa-11", name:"Quinoa Salad", type:"meal", day:11,
+    ingredients:[
+      {name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
+      {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}
+    ]
+  },
+
+  // Dinner: Salmon/Chicken + Steamed Broccoli (both days)
+  { id:"r-protein-10", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:10,
+    ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
+  },
+  { id:"r-protein-11", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:11,
+    ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
+  },
+
+  // Snacks (Day 10–11): raw veg + hummus, fresh fruit
+  { id:"s-snacks-10", type:"snack", day:10, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
+    ingredients:[
+      {name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},
+      {name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}
+    ]
+  },
+  { id:"s-snacks-11", type:"snack", day:11, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
+    ingredients:[
+      {name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},
+      {name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}
+    ]
+  }
+];
+
 
   /* ------------ Phase templates & goals ------------ */
   const GOAL_LABELS = {
@@ -438,7 +528,7 @@
                 dd && e("div",{className:"badge",style:{marginTop:6}}, dd)
               ),
               e("div",{className:"row",style:{minHeight:24}},
-                list.length? list.map(r=> e("span",{key:r.id,className:"badge"}, (r.type==="juice"?"🧃 ":"🍽️ "), r.name))
+                list.length? list.map(r=> e("span",{key:r.id,className:"badge"}, (r.type==="juice" ? "🧃 " : (r.type==="snack" ? "🍎 " : "🍽️ "))
                           : e("span",{style:{fontSize:12,color:"var(--muted)"}}, "—"),
                 hasNote && e("span",{className:"badge"},"📝 Note"),
                 hasPhotos && e("span",{className:"badge"},"📸 Photos")
