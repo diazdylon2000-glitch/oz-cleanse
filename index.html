@@ -2,63 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Oz Cleanse Companion</title>
+  <meta name="theme-color" content="#ffe5da" />
+  <link rel="icon" type="image/png" href="oz.png" />
   <link rel="stylesheet" href="style.css" />
+  <!-- React + Chart + Confetti -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin></script>
 </head>
 <body>
+  <!-- Error banner -->
+  <div id="errorBanner" class="err"></div>
 
-  <!-- Splash screen -->
+  <!-- Splash -->
   <div id="ozSplash" class="splash">
     <div class="splash-inner">
-      <img src="profile.jpg" alt="Profile Picture" />
-      <div class="bubble">Loading your cleanse plan…</div>
+      <img id="ozImg" src="oz.png" alt="Oz" />
+      <div id="ozBubble" class="bubble">Loading…</div>
     </div>
   </div>
 
-  <!-- Main app -->
-  <header class="mast">
-    <div class="left">
-      <img src="profile.jpg" alt="Profile" />
-      <div class="mast-title">
-        <h1>Oz Companion</h1>
-        <span class="phase" id="phaseLabel">FAST</span>
-      </div>
-    </div>
-    <div class="day-nav">
-      <button id="prevDay" class="day-chip">&#9664;</button>
-      <span class="day-chip" id="dayLabel">Day 1</span>
-      <button id="nextDay" class="day-chip">&#9654;</button>
-    </div>
-  </header>
-
-  <!-- Progress bar -->
-  <div class="progress-bar" id="progressBar"></div>
-
-  <!-- Checklist -->
-  <ul class="checklist" id="checklist">
-    <li><input type="checkbox" /> <span>💧 Drink 120–150 oz water</span></li>
-    <li><input type="checkbox" /> <span>🍵 Tea</span></li>
-    <li><input type="checkbox" /> <span>☕ Coffee</span></li>
-    <li><input type="checkbox" /> <span>🧂 Electrolytes</span></li>
-    <li><input type="checkbox" /> <span>🏃‍♂️ Exercise</span></li>
-    <li><input type="checkbox" /> <span>🐾👣 Weight check-in</span></li>
-  </ul>
-
-  <!-- Smart Coach -->
-  <div class="smart-coach" id="smartCoach">
-    <h2>🧠 Smart Coach</h2>
-    <p>Tap to analyze your note and get relief + motivation</p>
+  <!-- App -->
+  <div class="wrap">
+    <div id="root"></div>
   </div>
-
-  <!-- Navigation bar -->
-  <nav class="navbar">
-    <button>🏠</button>
-    <button>🛒</button>
-    <button>📅</button>
-    <button>📷</button>
-    <button>⚙️</button>
-  </nav>
 
   <script src="app.js"></script>
 </body>
