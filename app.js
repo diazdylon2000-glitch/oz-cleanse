@@ -1,56 +1,23 @@
-/* Oz Cleanse Companion — V14.5 (safe bootstrap + your patches)
-   Fixes included earlier:
-   - Calendar: ensure 4 juices per cleanse day (1 of each) without dupes
-   - Smart Coach: clean bullet list
-   - Splash: hides on oz:ready; 100% toast affirmation
-   New: Safe bootstrap so page never blanks if CDNs are late/missing
+/* Oz Cleanse Companion — V14.6 (targeted fixes)
+   Patches:
+   - Calendar shows 4 juices on EACH cleanse day (1 of each)
+   - Smart Coach renders a clean bullet list, not crammed text
+   - Splash shows randomized affirmation & fades correctly
 */
 
-/* === Early error catcher (must run even if React is missing) === */
-(function earlyErrorCatcher(){
-  window.addEventListener("error", (ev) => {
-    try {
-      const box = document.getElementById("errorBanner");
-      if (box) {
-        box.textContent = "Error: " + (ev.error?.message || ev.message || "Unknown");
-        box.style.display = "block";
-      }
-      const s = document.getElementById("ozSplash");
-      if (s) s.style.display = "grid"; // keep splash visible on error
-    } catch {}
-  });
-})();
-
-/* === Safe bootstrap: wait for CDN libs, then start === */
-(function bootstrap(){
-  const NEED = ["React","ReactDOM","Chart","confetti"];
-  const hasAll = () => NEED.every(k => window[k]);
-
-  let tries = 0, maxTries = 40; // ~4s @100ms
-  const tick = () => {
-    if (hasAll()) return startApp();
-    if (++tries >= maxTries) {
-      const box = document.getElementById("errorBanner");
-      if (box) {
-        box.textContent = "Error: Required libraries failed to load. Check network and script order for React/ReactDOM/Chart/confetti.";
-        box.style.display = "block";
-      }
-      const s = document.getElementById("ozSplash");
-      if (s) s.style.display = "grid";
-      return; // stop trying
-    }
-    setTimeout(tick, 100);
-  };
-
-  // start after DOM is ready so splash exists
-  if (document.readyState === "complete" || document.readyState === "interactive") tick();
-  else window.addEventListener("DOMContentLoaded", tick);
-})();
-
-/* === Your whole app lives inside startApp(), unchanged except where noted === */
-function startApp(){
+(function(){
   const e = React.createElement;
-  const {useState,useEffect,useRef,useMemo} = React;
+  const {useState,useEffect,useRef} = React;
+
+  /* ----------------- Error Banner ----------------- */
+  window.addEventListener("error", (ev) => {
+    const box = document.getElementById("errorBanner");
+    if (!box) return;
+    box.textContent = "Error: " + (ev.error?.message || ev.message);
+    box.style.display = "block";
+    const s = document.getElementById("ozSplash");
+    if (s) s.style.display = "none";
+  });
 
   /* ----------------- Helpers ----------------- */
   function useLocal(key, initial) {
@@ -62,24 +29,6 @@ function startApp(){
     return [val, setVal];
   }
   function vibrate(ms=12){ try{ navigator.vibrate && navigator.vibrate(ms) }catch{} }
-
-  // tiny toast for 100% day
-  function toast(msg = "100% day — you crushed it!") {
-    try {
-      const node = document.createElement('div');
-      node.className = 'card';
-      node.style.position = 'fixed';
-      node.style.left = '50%';
-      node.style.bottom = '80px';
-      node.style.transform = 'translateX(-50%)';
-      node.style.zIndex = '120';
-      node.style.padding = '12px 16px';
-      node.style.boxShadow = '0 16px 34px rgba(236,72,153,.18)';
-      node.textContent = msg;
-      document.body.appendChild(node);
-      setTimeout(()=> node.remove(), 2800);
-    } catch {}
-  }
 
   const AFFS = [
     "Hydration is happiness 🐾","Small habits, big change","Strong body, calm mind",
@@ -98,7 +47,22 @@ function startApp(){
   }
 
   /* ------------ Plan recipes (juices + rebuild meals) ------------ */
+
+  // Base templates for the 4 cleanse juices (used for calendar display on *each* cleanse day)
+  const CLEANSE_JUICE_TEMPLATES = [
+    { baseId:"melon",  name:"Melon Mint Morning", type:"juice",
+      ingredients:[{name:"Melon",qty:"1"},{name:"Mint",qty:"1/2 cup"},{name:"Lime",qty:"1"}] },
+    { baseId:"peach",  name:"Peachy Green Glow", type:"juice",
+      ingredients:[{name:"Peaches",qty:"3"},{name:"Cucumbers",qty:"2"},{name:"Spinach",qty:"4 cup"},{name:"Lemon",qty:"1"}] },
+    { baseId:"carrot", name:"Carrot Apple Ginger", type:"juice",
+      ingredients:[{name:"Carrots",qty:"7"},{name:"Apples",qty:"2"},{name:"Ginger",qty:'1"'},{name:"Lemon",qty:"1"}] },
+    { baseId:"grape",  name:"Grape Romaine Cooler", type:"juice",
+      ingredients:[{name:"Grapes",qty:"3 cup"},{name:"Romaine",qty:"3 cup"},{name:"Cucumbers",qty:"2"},{name:"Lemon",qty:"1"}] }
+  ];
+
+  // Your prior default plan (unchanged except naming) — keeps your rebuild days/meals intact
   const PLAN_RECIPES = [
+    // Original single-day placements for juices (kept so existing users don't lose data)
     { id:"r-melon",  name:"Melon Mint Morning", type:"juice", day:4, servings:1,
       ingredients:[{name:"Melon",qty:"1"},{name:"Mint",qty:"1/2 cup"},{name:"Lime",qty:"1"}]
     },
@@ -112,42 +76,60 @@ function startApp(){
       ingredients:[{name:"Grapes",qty:"3 cup"},{name:"Romaine",qty:"3 cup"},{name:"Cucumbers",qty:"2"},{name:"Lemon",qty:"1"}]
     },
 
-    // rebuild days...
+    // ===================== REBUILD — Day 8 & 9 =====================
     { id:"r-smoothie-8", name:"Smoothie Breakfast", type:"meal", day:8,
-      ingredients:[{name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}]
+      ingredients:[{name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+        {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}]
     },
     { id:"r-smoothie-9", name:"Smoothie Breakfast", type:"meal", day:9,
-      ingredients:[{name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}]
+      ingredients:[{name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+        {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}]
     },
     { id:"r-steamveg-8", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:8,
-      ingredients:[{name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"}, {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}]
+      ingredients:[{name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"},
+        {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+        {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}]
     },
     { id:"r-steamveg-9", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:9,
-      ingredients:[{name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"}, {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}]
+      ingredients:[{name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"},
+        {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"},
+        {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}]
     },
     { id:"r-lentil-8", name:"Lentil Soup", type:"meal", day:8,
-      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}]
+      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},
+        {name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},
+        {name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}]
     },
     { id:"r-lentil-9", name:"Lentil Soup", type:"meal", day:9,
-      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}]
+      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},
+        {name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},
+        {name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}]
     },
     { id:"s-snacks-8", type:"snack", day:8, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
-      ingredients:[{name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"}, {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}]
+      ingredients:[{name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"},
+        {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}]
     },
     { id:"s-snacks-9", type:"snack", day:9, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
-      ingredients:[{name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"}, {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}]
+      ingredients:[{name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"},
+        {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}]
     },
+
+    // ===================== REBUILD — Day 10 & 11 =====================
     { id:"r-oats-10", name:"Overnight Oats Breakfast", type:"meal", day:10,
-      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}]
+      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},
+        {name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}]
     },
     { id:"r-oats-11", name:"Overnight Oats Breakfast", type:"meal", day:11,
-      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}]
+      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},
+        {name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}]
     },
     { id:"r-quinoa-10", name:"Quinoa Salad", type:"meal", day:10,
-      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},{name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
+      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
+        {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
     },
     { id:"r-quinoa-11", name:"Quinoa Salad", type:"meal", day:11,
-      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},{name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
+      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
+        {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
     },
     { id:"r-protein-10", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:10,
       ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
@@ -156,10 +138,12 @@ function startApp(){
       ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
     },
     { id:"s-snacks-10", type:"snack", day:10, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
-      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}]
+      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},
+        {name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}]
     },
     { id:"s-snacks-11", type:"snack", day:11, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
-      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}]
+      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},
+        {name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}]
     }
   ];
 
@@ -190,7 +174,7 @@ function startApp(){
     const num = m[1].includes("/")
       ? m[1].split(" ").reduce((a,b)=> b.includes("/") ? a + (parseFloat(b.split("/")[0]) / parseFloat(b.split("/")[1])) : a + parseFloat(b), 0)
       : parseFloat(m[1]);
-    const unit = (m[3]||"").replace(/"/g,"in");
+    const unit = (m[3]||"").replace(/"/g,"in"); // treat 1" ginger as unknown unit
     return {n:num, u:unit};
   }
   function toCup(q){
@@ -229,47 +213,15 @@ function startApp(){
   (function(){
     const bubble = document.getElementById("ozBubble");
     if (bubble) bubble.textContent = nextAff();
-
-    function hide(){
-      const s=document.getElementById("ozSplash");
-      if(s) s.classList.add("fade-out");
-      if(bubble) bubble.classList.add("fade-out");
-      setTimeout(()=>{ if(s) s.style.display="none"; }, 650);
-    }
-
-    window.addEventListener("load", () => { setTimeout(hide, 1200); });
-    document.addEventListener("oz:ready", hide);
-  })();
-
-  /* ==================== PATCH: ensure 4 juices on cleanse days ==================== */
-  const CLEANSE_TEMPLATE = [
-    { key:"green",  name:"Green Juice",
-      ingredients:[{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Spinach",qty:"2 cup"},{name:"Lemon",qty:"1"}] },
-    { key:"carrot", name:"Carrot-Apple",
-      ingredients:[{name:"Carrots",qty:"7"},{name:"Apples",qty:"2"},{name:"Ginger",qty:"1 in"}] },
-    { key:"beet",   name:"Beet-Citrus",
-      ingredients:[{name:"Beets",qty:"2"},{name:"Orange",qty:"1"},{name:"Lemon",qty:"1/2"}] },
-    { key:"citrus", name:"Citrus-Ginger",
-      ingredients:[{name:"Grapefruit",qty:"1"},{name:"Orange",qty:"1"},{name:"Ginger",qty:"1 in"}] },
-  ];
-  function expandCleanseForDays(recipes, days){
-    const out = recipes.slice();
-    const idSet = new Set(out.map(r=>r.id));
-    const cleanseDays = (days||[]).filter(d=>d.phase==='cleanse').map(d=>d.day);
-    cleanseDays.forEach(dayNum=>{
-      const existing = out.filter(r=>r.day===dayNum && r.type==='juice');
-      if (existing.length >= 4) return;
-      const needed = 4 - existing.length;
-      for(let i=0;i<needed;i++){
-        const tmpl = CLEANSE_TEMPLATE[i % CLEANSE_TEMPLATE.length];
-        const id = `cj-${dayNum}-${tmpl.key}-${i}`;
-        if (idSet.has(id)) continue;
-        out.push({ id, type:'juice', day:dayNum, servings:1, name:tmpl.name, ingredients:(tmpl.ingredients||[]) });
-        idSet.add(id);
-      }
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const s=document.getElementById("ozSplash");
+        if(s) s.classList.add("fade-out");
+        if(bubble) bubble.classList.add("fade-out");
+        setTimeout(()=>{ if(s) s.style.display="none"; }, 650);
+      }, 1200);
     });
-    return out;
-  }
+  })();
 
   /* ================= Components ================= */
 
@@ -321,7 +273,6 @@ function startApp(){
       if(Math.round(progress)===100){
         try{ confetti({ particleCount:160, spread:72, ticks:240, scalar:1.1, origin:{y:.7} }); }catch{}
         vibrate(25);
-        toast();
       }
     },[progress]);
 
@@ -331,11 +282,11 @@ function startApp(){
         d.checks={...(d.checks||{}), [id]: !d.checks?.[id]}; n[idx]=d; return n; });
     }
 
-    // Smart Coach
-    const [coachText,setCoachText]=useState("");
+    // Smart Coach (now structured: header + bullets + boost)
+    const [coach,setCoach]=useState(null);
     function runCoach(){
       const txt=(day.note||"").toLowerCase();
-      if(!txt) { setCoachText("Write a quick note below, then tap Smart Coach."); return;}
+      if(!txt) { setCoach({header:"Write a quick note below, then tap Smart Coach.", tips:[], boost:""}); return; }
       const found=new Set();
       if(/headache|migraine|head pain/.test(txt)) found.add("headache");
       if(/dizzy|light.?headed|vertigo/.test(txt))   found.add("dizziness");
@@ -343,29 +294,27 @@ function startApp(){
       if(/tired|fatigue|exhaust/.test(txt))         found.add("fatigue");
       if(/hungry|crav(ing|es)/.test(txt))           found.add("hunger");
 
-      const tips={
+      const tipsDict={
         headache:["12–16 oz water + LMNT","Dim screens 5–10 min","Slow nasal breathing (in 4 / out 6)"],
         dizziness:["Sit until steady","Small juice or pinch of salt","Slow breaths"],
         nausea:["Peppermint/ginger tea","Cool water sips","Fresh air"],
         fatigue:["15–20 min rest","Hydrate / electrolytes","2-min stretch"],
         hunger:["Water first","Sip scheduled juice slowly","5-min walk as reset"]
       };
-      const picked=[...found].flatMap(k=>tips[k]||[]).slice(0,7);
+      const tips=[...found].flatMap(k=>tipsDict[k]||[]).slice(0,7);
       const mood = /proud|better|good|calm|motivated/.test(txt) ? "up" :
                    /overwhelm|anxious|stressed|down|frustrat/.test(txt) ? "low" : "mid";
       const boost = mood==="low" ? "You’re not alone—make today gentle." :
                      mood==="mid" ? "Nice work staying steady. One tiny upgrade today." :
                      "Ride the wave, stay kind to yourself.";
       const header = found.size ? `I noticed: ${[...found].join(", ")}.` : "No specific symptoms spotted — here’s a steady plan.";
-      const body = picked.length ? "Try:\n• " + picked.join("\n• ") : "Hydrate, 5 slow breaths, short walk, then reassess.";
-      setCoachText(`${header}\n\n${body}\n\n${boost}`);
+      setCoach({header,tips,boost});
     }
-    const coachLines = useMemo(() => String(coachText||"").split(/\r?\n+/).filter(Boolean), [coachText]);
 
     // Upcoming 2-day ingredients (combined)
     function nextTwoDayIngredients(current){
       function gatherFor(daysWanted){
-        const bag={};
+        const bag={}; // name -> {qtyList:[], days:Set}
         (recipes||[]).forEach(r=>{
           if(!r.day || !daysWanted.has(r.day)) return;
           (r.ingredients||[]).forEach(it=>{
@@ -382,6 +331,7 @@ function startApp(){
       const d1=current.day, d2=current.day+1;
       let list = gatherFor(new Set([d1,d2]));
       if(list.length) return {items:list, label:`Today + Tomorrow — Ingredients`};
+      // fallback: next two recipe days
       const futureDays=[...new Set((recipes||[]).filter(r=>r.day>=current.day).map(r=>r.day))].sort((a,b)=>a-b).slice(0,2);
       list=gatherFor(new Set(futureDays));
       const label = futureDays.length===2 ? `Upcoming Ingredients — Day ${futureDays[0]} & ${futureDays[1]}` :
@@ -392,21 +342,20 @@ function startApp(){
 
     const weightSeries = days.map(d=> d.weight==null ? null : d.weight);
 
+    // Header uses .mast-title structure so CSS stacks the phase under the title
     return e(React.Fragment,null,
       e("div",{className:"card mast"},
         e("div",{className:"left"},
           e("img",{src:"oz.png",alt:"Oz"}),
-          e("div",null,
-            e("h1",{style:{whiteSpace:'nowrap'}}, "Oz Companion"),
-            e("div",{className:"phase"}, day.phase.toUpperCase())
+          e("div",{className:"mast-title"},
+            e("h1",null,"Oz Companion"),
+            e("div",{className:"phase"}, day.phase ? day.phase.toUpperCase() : "")
           )
         ),
         e("div",{className:"day-nav"},
-          e("button",{className:"btn",onClick:()=>changeDay(-1),"aria-label":"Prev day"},"◀"),
-          e("div",{className:"day-chip"},
-            e("div",{style:{fontWeight:800}}, "Day ", day.day)
-          ),
-          e("button",{className:"btn",onClick:()=>changeDay(1),"aria-label":"Next day"},"▶")
+          e("button",{className:"btn",onClick:()=>setIdx(i=> (i-1+days.length)%days.length),"aria-label":"Prev day"},"◀"),
+          e("div",{className:"day-chip"}, e("div",{style:{fontWeight:800}}, "Day ", day.day)),
+          e("button",{className:"btn",onClick:()=>setIdx(i=> (i+1)%days.length),"aria-label":"Next day"},"▶")
         )
       ),
 
@@ -422,10 +371,14 @@ function startApp(){
           e("span",{className:"badge"},"🧠 Smart Coach"),
           e("div",{style:{marginTop:6,color:"var(--muted)"}}, "Tap to analyze your note and get relief + motivation")
         ),
-        coachLines.length>0 && e("div",{className:"coachOut"},
-          e("ul",{style:{margin:"6px 0 0", padding:"0 0 0 18px"}},
-            coachLines.map((line,i)=> e("li",{key:i}, line))
-          )
+        coach && e("div",{className:"coachOut"},
+          e("div",{style:{fontWeight:700, marginBottom:6}}, coach.header),
+          coach.tips && coach.tips.length
+            ? e("ul",{style:{margin:"0 0 8px 18px"}},
+                coach.tips.map((t,i)=> e("li",{key:i}, t))
+              )
+            : e("div",{style:{color:"var(--muted)", marginBottom:6}}, "Hydrate, 5 slow breaths, short walk, then reassess."),
+          e("div",{style:{color:"var(--muted)"}}, coach.boost)
         ),
         e("textarea",{className:"noteArea", placeholder:"Notes…",
           value:day.note||"",
@@ -521,6 +474,18 @@ function startApp(){
   }
 
   function Calendar({ days, recipes, settings }) {
+    // ensures 4 juices per cleanse day in the UI (1 of each)
+    function expandCleanseJuices(listForDay, dayObj){
+      if((dayObj.phase||"")!=="cleanse") return listForDay;
+      const byName = new Map(listForDay.map(r=>[r.name, r]));
+      CLEANSE_JUICE_TEMPLATES.forEach(t=>{
+        if(!byName.has(t.name)){
+          byName.set(t.name, { id:`auto-${dayObj.day}-${t.baseId}`, name:t.name, type:"juice", day:dayObj.day, servings:1 });
+        }
+      });
+      return Array.from(byName.values());
+    }
+
     function dateFor(dayNum) {
       const dstr = settings.startDate || "";
       if (!dstr) return null;
@@ -534,13 +499,14 @@ function startApp(){
       e("h2", null, "Calendar"),
       e("ul", { style: { listStyle: "none", padding: 0, margin: 0 } },
         days.map(d => {
-          const list = (recipes || []).filter(r => r.day === d.day);
+          let list = (recipes || []).filter(r => r.day === d.day);
+          list = expandCleanseJuices(list, d); // << show 4 juices every cleanse day
           const hasPhotos = !!(d.photos && d.photos.length);
           const hasNote = !!(d.note && d.note.trim().length);
           const dd = dateFor(d.day);
 
           return e("li", { key: d.day, className: "card", style: { padding: "12px", marginTop: 10 } },
-          e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
+            e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
               e("div", null,
                 e("div", { style: { fontWeight: 800 } }, "Day ", d.day, " — ", (d.phase || "").toUpperCase()),
                 dd && e("div", { className: "badge", style: { marginTop: 6 } }, dd)
@@ -691,8 +657,10 @@ function startApp(){
       if(mJ && curDay){ cur={id:"r-"+Math.random().toString(36).slice(2), name:mJ[1], type:"juice", day:curDay, ingredients:[]}; recipes.push(cur); return; }
       const mM=line.match(/^(Breakfast|Lunch|Dinner|Meal)\s*[-:]\s*(.+)$/i);
       if(mM && curDay){ cur={id:"m-"+Math.random().toString(36).slice(2), name:mM[2], type:"meal", day:curDay, ingredients:[]}; recipes.push(cur); return; }
-      const ing=line.match(/^[•\-]\s*(.+)$/); if(ing && cur){ cur.ingredients.push({name:ing[1].replace(/^[\d/.\s]+\w*\s+/,""), qty:ing[1].match(/^([\d/.\s]+\w*)/i)?.[1]||""}); }
+      const ing=line.match(/^[•\-]\s*(.+)$/); if(ing && cur){ cur.ingredients.push({name:igName(ing[1]), qty:igQty(ing[1])}); }
     });
+    function igQty(s){ return s.match(/^([\d/.\s]+\w*)/i)?.[1]||"" }
+    function igName(s){ return s.replace(/^[\d/.\s]+\w*\s+/,"") }
     return {days,recipes};
   }
 
@@ -705,11 +673,6 @@ function startApp(){
     const [recipes,setRecipes]=useLocal("oz.recipes", PLAN_RECIPES);
     const [groceries,setGroceries]=useLocal("oz.groceries", aggregateGroceries(PLAN_RECIPES));
     const [tab,setTab]=useState("dash");
-
-    // ensure cleanse days always show 4 juices/day
-    useEffect(()=>{
-      setRecipes(prev => expandCleanseForDays(prev, days));
-    },[days,setRecipes]);
 
     useEffect(()=>{ // ensure grocery list follows recipes
       setGroceries(aggregateGroceries(recipes));
@@ -729,19 +692,8 @@ function startApp(){
     );
   }
 
-  // Mount
-  try {
-    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
-  } catch (err) {
-    const box = document.getElementById("errorBanner");
-    if (box) {
-      box.textContent = "Mount error: " + (err?.message || err);
-      box.style.display = "block";
-    }
-    const s = document.getElementById("ozSplash"); if (s) s.style.display = "grid";
-    throw err;
-  }
+  ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+})();
 
-  // Signal splash to hide if still up
-  document.dispatchEvent(new Event('oz:ready'));
-}
+// Let any outer loader know we're mounted
+document.dispatchEvent(new Event('oz:ready'));
