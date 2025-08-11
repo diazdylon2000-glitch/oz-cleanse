@@ -20,28 +20,38 @@
   var useRef = React.useRef;
 
   // ---- Splash: pick line & auto-hide ----
-  (function initSplash() {
-    var LINES = [
-      "You’ve got this!","Small habits, big change","Progress, not perfection",
-      "Sip, breathe, reset","Strong body, calm mind","Hydration is happiness 🐾",
-      "Future-you says thanks","Gentle + consistent + kind","Shine time ✨",
-      "Keep it playful","You’re doing the work 💪"
-    ];
+// ---- Splash: pick line & auto-hide ----
+(function initSplash() {
+  var LINES = [
+    "You’ve got this!","Small habits, big change","Progress, not perfection",
+    "Sip, breathe, reset","Strong body, calm mind","Hydration is happiness 🐾",
+    "Future-you says thanks","Gentle + consistent + kind","Shine time ✨",
+    "Keep it playful","You’re doing the work 💪"
+  ];
+
+  function setBubbleLine() {
     var bubble = document.getElementById("ozBubble");
     if (bubble) bubble.textContent = LINES[Math.floor(Math.random() * LINES.length)];
+  }
 
-    function hideSplash() {
-      var s = document.getElementById("ozSplash");
-      var b = document.getElementById("ozBubble");
-      if (s) s.style.display = "none";
-      if (b) b.style.display = "none";
-    }
-    window.addEventListener("load", function () {
-      setTimeout(hideSplash, 1400);
-    });
-    // failsafe
-    setTimeout(hideSplash, 4000);
-  })();
+  function hideSplash() {
+    var s = document.getElementById("ozSplash");
+    var b = document.getElementById("ozBubble");
+    if (s) s.style.display = "none";
+    if (b) b.style.display = "none";
+  }
+
+  // Ensure bubble text is written after DOM exists
+  document.addEventListener("DOMContentLoaded", setBubbleLine);
+  window.addEventListener("pageshow", setBubbleLine);
+  window.addEventListener("load", function () {
+    setBubbleLine();
+    setTimeout(hideSplash, 1400);
+  });
+
+  // Failsafe so it never hangs
+  setTimeout(hideSplash, 4000);
+})();
 
   // ---- Helpers ----
   function useLocal(key, initialValue) {
@@ -548,22 +558,56 @@
     var series = p.days.map(function (row) { return (row.weight == null ? null : row.weight); });
 
     // Masthead (one straight line)
-    var head = e("div", { className: "mast card" },
-      e("div", { className: "mastRow" },
-        e("div", { className: "mastLeft" },
-          e("img", { src: "oz.png", alt: "Oz" }),
-          e("div", { className: "mastTitle" },
-            e("b", null, "Oz Companion"),
-            e("small", null, d.phase.toUpperCase())
-          )
-        ),
-        e("div", { className: "day-nav" },
-          e("button", { className: "day-btn", onClick: function () { changeDay(-1); }, "aria-label": "Previous day" }, "◀"),
-          e("span", { className: "day-label" }, "Day " + d.day),
-          e("button", { className: "day-btn", onClick: function () { changeDay(1); }, "aria-label": "Next day" }, "▶")
-        )
-      )
-    );
+  var head = e("div", {
+  className: "card",
+  style: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: 12
+  }
+},
+  // Left: Oz avatar + title
+  e("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0 } },
+    e("img", {
+      src: "oz.png",
+      alt: "Oz",
+      style: {
+        height: 40, width: 40, borderRadius: 9999,
+        objectFit: "cover", flex: "0 0 auto",
+        boxShadow: "0 2px 8px rgba(0,0,0,.08)"
+      }
+    }),
+    e("div", { style: { display: "flex", flexDirection: "column", minWidth: 0 } },
+      e("div", {
+        style: {
+          fontWeight: 800, letterSpacing: .2,
+          fontSize: 22, lineHeight: "24px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+        }
+      }, "Oz Companion"),
+      e("div", { style: { marginTop: 2, color: "#64748b", fontWeight: 600, letterSpacing: .6, fontSize: 12 } }, d.phase.toUpperCase())
+    )
+  ),
+
+  // Right: centered day selector
+  e("div", { style: { display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" } },
+    e("button", {
+      className: "btn", onClick: function () { changeDay(-1); }, "aria-label": "Previous day",
+      style: { borderRadius: 9999 }
+    }, "◀"),
+    e("span", {
+      style: {
+        border: "1px solid #f3d0e1", borderRadius: 9999, padding: "8px 16px",
+        fontWeight: 800, fontSize: 18
+      }
+    }, "Day " + d.day),
+    e("button", {
+      className: "btn", onClick: function () { changeDay(1); }, "aria-label": "Next day",
+      style: { borderRadius: 9999 }
+    }, "▶")
+  )
+);
 
     var dash = e("div", { className: "wrap" },
       head,
