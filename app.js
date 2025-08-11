@@ -1,8 +1,8 @@
-/* Oz Cleanse Companion — V14.7 (calendar + imports + start-date aware)
+/* Oz Cleanse Companion — V14.8 (ingredients fix + start-date aware)
    - Splash with randomized affirmations
    - Single-row mast: avatar • title • day selector
    - Phase-aware paw checklist (Fast/Cleanse/Rebuild)
-   - Smart Coach (outputs bullet list; doesn't overwrite note)
+   - Smart Coach (outputs bullet list; preserves note)
    - Weight input auto-checks "weight" + mini chart
    - Next 2-day ingredients (Start-Date aware) with combined quantities
    - Photos: day selector + upload in same card; LS saved; affirmation
@@ -114,29 +114,62 @@
   })();
 
   /* ------------ Plan recipes (juices + rebuild meals) ------------ */
-
-  // Cleanse juice set (reused each cleanse day)
-  const CLEANSE_JUICES = [
-    { baseId:"j-green",  name:"Green Juice" },
-    { baseId:"j-carrot", name:"Carrot-Apple" },
-    { baseId:"j-beet",   name:"Beet-Citrus" },
-    { baseId:"j-ginger", name:"Citrus-Ginger" }
+  // A 4-juice cleanse set WITH ingredients. We repeat this set on Days 4–7.
+  const CLEANSE_JUICE_SET = [
+    {
+      baseId:"j-melon", name:"Melon Mint Morning",
+      ingredients:[
+        {name:"Melon",qty:"1"},
+        {name:"Mint",qty:"1/2 cup"},
+        {name:"Lime",qty:"1"}
+      ]
+    },
+    {
+      baseId:"j-peach", name:"Peachy Green Glow",
+      ingredients:[
+        {name:"Peaches",qty:"3"},
+        {name:"Cucumbers",qty:"2"},
+        {name:"Spinach",qty:"4 cup"},
+        {name:"Lemon",qty:"1"}
+      ]
+    },
+    {
+      baseId:"j-carrot", name:"Carrot Apple Ginger",
+      ingredients:[
+        {name:"Carrots",qty:"7"},
+        {name:"Apples",qty:"2"},
+        {name:"Ginger",qty:'1"'},
+        {name:"Lemon",qty:"1"}
+      ]
+    },
+    {
+      baseId:"j-grape", name:"Grape Romaine Cooler",
+      ingredients:[
+        {name:"Grapes",qty:"3 cup"},
+        {name:"Romaine",qty:"3 cup"},
+        {name:"Cucumbers",qty:"2"},
+        {name:"Lemon",qty:"1"}
+      ]
+    }
   ];
-  // expands 4-juice set to each cleanse day
   function expandCleanseDays(daysArr){
     const out = [];
     daysArr.forEach(dayNum=>{
-      CLEANSE_JUICES.forEach(j=>{
+      CLEANSE_JUICE_SET.forEach(j=>{
         out.push({
           id: `${j.baseId}-d${dayNum}`,
-          name: j.name, type: "juice", day: dayNum, servings: 1, ingredients:[]
+          name: j.name,
+          type: "juice",
+          day: dayNum,
+          servings: 1,
+          ingredients: j.ingredients.map(it=>({...it})) // copy for aggregation
         });
       });
     });
     return out;
   }
 
-  // FULL DEFAULT PLAN
+  // FULL DEFAULT PLAN (4 juices each day 4–7 + rebuild meals/snacks)
   const PLAN_RECIPES = [
     ...expandCleanseDays([4,5,6,7]),
 
@@ -193,7 +226,6 @@
     cleanse:["water","tea","coffee","juices","lmnt","exercise","weight"],
     rebuild:["water","lmnt","exercise","wholefood","weight"]
   };
-
   function defaultDays(){
     const phases=["fast","fast","fast","cleanse","cleanse","cleanse","cleanse","rebuild","rebuild","rebuild","rebuild"];
     return phases.map((ph,i)=>({day:i+1, phase:ph, checks:{}, note:"", weight:null, photos:[]}));
@@ -365,7 +397,7 @@
           e("span",{className:"badge"},"🧠 Smart Coach"),
           e("div",{style:{marginTop:6,color:"var(--muted)"}}, "Tap to analyze your note and get relief + motivation")
         ),
-        coachText && e("div",{className:"coachOut"}, coachText),
+        coachText && e("div",{className:"coachOut", style:{whiteSpace:"pre-line"}}, coachText),
         e("textarea",{className:"noteArea", placeholder:"Notes…",
           value:day.note||"",
           onChange:(ev)=> setDays(prev=>{ const n=prev.slice(); const d={...n[idx]}; d.note=ev.target.value; n[idx]=d; return n; })
