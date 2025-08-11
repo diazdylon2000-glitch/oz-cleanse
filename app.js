@@ -1,10 +1,10 @@
-/* Oz Cleanse Companion — V14.6 (calendar + imports fixed)
+/* Oz Cleanse Companion — V14.7 (calendar + imports + start-date aware)
    - Splash with randomized affirmations
    - Single-row mast: avatar • title • day selector
    - Phase-aware paw checklist (Fast/Cleanse/Rebuild)
    - Smart Coach (outputs bullet list; doesn't overwrite note)
    - Weight input auto-checks "weight" + mini chart
-   - Next 2-day ingredients with combined quantities
+   - Next 2-day ingredients (Start-Date aware) with combined quantities
    - Photos: day selector + upload in same card; LS saved; affirmation
    - Calendar: 4 juices per cleanse day + rebuild meals/snacks; badges for notes/photos
    - Settings: start date; import default plan; ChatGPT import (JSON or text);
@@ -199,7 +199,18 @@
     return phases.map((ph,i)=>({day:i+1, phase:ph, checks:{}, note:"", weight:null, photos:[]}));
   }
 
-  /* ------------ App Components ------------ */
+  /* ------------ Start-date → real plan day helper ------------ */
+  function planDayFromStart(startDate, totalDays=11){
+    if(!startDate) return null;
+    const base = new Date(startDate + "T00:00:00");
+    if (isNaN(base)) return null;
+    const now  = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.floor((today - base) / 86400000) + 1; // Day # (1-based)
+    return Math.max(1, Math.min(totalDays, diff));
+  }
+
+  /* ------------ Components ------------ */
 
   const Progress = ({value}) => e("div",{className:"prog"}, e("i",{style:{width:Math.max(0,Math.min(100,value))+"%"}}));
 
@@ -231,7 +242,9 @@
     return e("div",{style:{height:180}}, e("canvas",{ref}));
   };
 
-  function Dashboard({days,setDays,templates,goals,recipes}){
+  /* ------------ Pages ------------ */
+
+  function Dashboard({days,setDays,templates,goals,recipes,settings}){
     const [idx,setIdx]=useState(0);
     const day=days[idx]||days[0];
 
@@ -286,8 +299,10 @@
       setCoachText(`${header}\n\n${body}\n\n${boost}`);
     }
 
-    // Upcoming 2-day ingredients (combined)
-    function nextTwoDayIngredients(current){
+    // Upcoming 2-day ingredients (Start-Date aware) — combined
+    function nextTwoDayIngredients(current, settings, days, recipes){
+      const realToday = planDayFromStart(settings.startDate, days.length) || current.day;
+
       function gatherFor(daysWanted){
         const bag={}; // name -> {qtyList:[], days:Set}
         (recipes||[]).forEach(r=>{
@@ -303,17 +318,20 @@
           name:x.name, qty:combineQtyStrings(x.qtyList), days:[...x.days].sort((a,b)=>a-b)
         })).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
       }
-      const d1=current.day, d2=current.day+1;
+      const d1=realToday, d2=realToday+1;
       let list = gatherFor(new Set([d1,d2]));
       if(list.length) return {items:list, label:`Today + Tomorrow — Ingredients`};
-      // fallback: next two recipe days
-      const futureDays=[...new Set((recipes||[]).filter(r=>r.day>=current.day).map(r=>r.day))].sort((a,b)=>a-b).slice(0,2);
+
+      // fallback: next two recipe days on/after real “today”
+      const futureDays=[...new Set((recipes||[]).filter(r=>r.day>=realToday).map(r=>r.day))]
+                        .sort((a,b)=>a-b).slice(0,2);
       list=gatherFor(new Set(futureDays));
       const label = futureDays.length===2 ? `Upcoming Ingredients — Day ${futureDays[0]} & ${futureDays[1]}` :
-                                            futureDays.length===1 ? `Upcoming Ingredients — Day ${futureDays[0]}` : `Upcoming Ingredients`;
+                    futureDays.length===1 ? `Upcoming Ingredients — Day ${futureDays[0]}` :
+                    `Upcoming Ingredients`;
       return {items:list, label};
     }
-    const nxt = nextTwoDayIngredients(day);
+    const nxt = nextTwoDayIngredients(day, settings, days, recipes);
 
     const weightSeries = days.map(d=> d.weight==null ? null : d.weight);
 
@@ -681,7 +699,7 @@ Breakfast - Smoothie
     },[recipes,setGroceries]);
 
     return e(React.Fragment,null,
-      tab==="dash"     && e(Dashboard,{days,setDays,templates,goals,recipes}),
+      tab==="dash"     && e(Dashboard,{days,setDays,templates,goals,recipes,settings}),
       tab==="groceries"&& e(Groceries,{groceries,setGroceries}),
       tab==="calendar" && e(Calendar,{days,recipes,settings}),
       tab==="photos"   && e(Photos,{days,setDays}),
