@@ -105,5 +105,28 @@ small{color:var(--sub)}
 .modal.show{display:flex}
 .sheet{width:min(560px,94vw);background:#fff;border-radius:16px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.2);padding:14px}
 
+/* Settings / Modal bits */
+.modal{
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(15,23,42,.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.sheet{
+  width: min(560px, 94vw);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.25);
+  padding: 14px;
+}
+.btn.primary{
+  background: #111827; color:#fff; border-color:#111827;
+}
+.badge{
+  display:inline-block; padding:2px 8px; border:1px solid #e7ccd7;
+  background:#fff; border-radius:9999px; font-size:12px;
+}
+
+
 /* iOS zoom fix on numeric inputs */
 input[type="number"]{font-size:16px}
