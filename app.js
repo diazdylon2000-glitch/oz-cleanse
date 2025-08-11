@@ -1,16 +1,15 @@
-/* Oz Cleanse Companion — V15.0 (patched)
-   - Splash + randomized affirmation (fades out)
-   - Header: avatar + single-line title, phase under title
-   - Smart Coach outputs a bulleted list
-   - Calendar: forces 4 juices per cleanse day (1 of each)
-   - Settings tab restored
-   - Groceries, Photos, Weight chart, Notes — preserved
+/* Oz Cleanse Companion — V15.1 (stable)
+   - Splash with Oz + rotating affirmation (fade)
+   - Header: avatar + single-line title; phase under title
+   - Smart Coach bullets
+   - Calendar auto-expands cleanse days to 4 juices (1 each)
+   - Tabs: Dashboard, Groceries, Calendar, Photos, Settings
 */
 (function(){
   const e = React.createElement;
   const {useState,useEffect,useRef} = React;
 
-  /* ----------------- Error Banner ----------------- */
+  /* Error banner */
   window.addEventListener("error", (ev) => {
     const box = document.getElementById("errorBanner");
     if (!box) return;
@@ -20,7 +19,7 @@
     if (s) s.style.display = "none";
   });
 
-  /* ----------------- Helpers ----------------- */
+  /* Helpers */
   function useLocal(key, initial) {
     const [val, setVal] = useState(() => {
       try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : initial; }
@@ -47,26 +46,20 @@
     }catch{ return AFFS[0]; }
   }
 
-  /* ------------ Plan recipes (juices + rebuild meals) ------------ */
-  // Four standard juices for cleanse-day expansion:
+  /* Plan data */
   const CLEANSE_TEMPLATES = [
-    { baseId:"green",  name:"Green Juice",        type:"juice" },
-    { baseId:"carrot", name:"Carrot-Apple",       type:"juice" },
-    { baseId:"beet",   name:"Beet-Citrus",        type:"juice" },
-    { baseId:"ginger", name:"Citrus-Ginger",      type:"juice" },
+    { baseId:"green",  name:"Green Juice",   type:"juice" },
+    { baseId:"carrot", name:"Carrot-Apple",  type:"juice" },
+    { baseId:"beet",   name:"Beet-Citrus",   type:"juice" },
+    { baseId:"ginger", name:"Citrus-Ginger", type:"juice" },
   ];
-
-  // Minimal seeds; you can extend these with your real plan. Expansion will still show 4/day.
   const PLAN_RECIPES = [
     { id:"d4-green",  name:"Green Juice",   type:"juice", day:4, servings:1, ingredients:[{name:"Spinach",qty:"2 cup"}] },
     { id:"d5-carrot", name:"Carrot-Apple",  type:"juice", day:5, servings:1, ingredients:[{name:"Carrots",qty:"6"}] },
     { id:"d6-beet",   name:"Beet-Citrus",   type:"juice", day:6, servings:1, ingredients:[{name:"Beets",qty:"2"}] },
     { id:"d7-ginger", name:"Citrus-Ginger", type:"juice", day:7, servings:1, ingredients:[{name:"Ginger",qty:'1"'}] },
-
-    // (Rebuild sample items can be added; groceries aggregation will adapt.)
   ];
 
-  /* ------------ Phase templates & goals ------------ */
   const GOAL_LABELS = {
     water:"💧 Drink 120–150 oz water", tea:"🍵 Tea", coffee:"☕ Coffee", lmnt:"🧂 Electrolytes",
     exercise:"🏃 Exercise", wholefood:"🥗 Whole food meals", weight:"👣 Weight check-in", juices:"🧃 Juices"
@@ -76,13 +69,12 @@
     cleanse:["water","tea","coffee","juices","lmnt","exercise","weight"],
     rebuild:["water","lmnt","exercise","wholefood","weight"]
   };
-
   function defaultDays(){
     const phases=["fast","fast","fast","cleanse","cleanse","cleanse","cleanse","rebuild","rebuild","rebuild","rebuild"];
     return phases.map((ph,i)=>({day:i+1, phase:ph, checks:{}, note:"", weight:null, photos:[]}));
   }
 
-  /* ------------ Splash: random bubble text then fade ------------ */
+  /* Splash */
   (function(){
     const bubble = document.getElementById("ozBubble");
     if (bubble) bubble.textContent = nextAff();
@@ -96,8 +88,7 @@
     });
   })();
 
-  /* ================= Components ================= */
-
+  /* Components */
   const Progress = ({value}) => e("div",{className:"prog"}, e("i",{style:{width:Math.max(0,Math.min(100,value))+"%"}}));
 
   const Checklist = ({ items, state, onToggle }) =>
@@ -113,8 +104,7 @@
   const WeightChart = ({series}) => {
     const ref=useRef(null), chartRef=useRef(null);
     useEffect(()=>{
-      const ctx=ref.current?.getContext("2d");
-      if(!ctx) return;
+      const ctx=ref.current?.getContext("2d"); if(!ctx) return;
       if(chartRef.current) try{ chartRef.current.destroy(); }catch{}
       chartRef.current=new Chart(ctx,{
         type:"line",
@@ -129,8 +119,7 @@
     return e("div",{style:{height:180}}, e("canvas",{ref}));
   };
 
-  /* ------------ Pages ------------ */
-
+  /* Pages */
   function Dashboard({days,setDays,templates,goals,recipes}){
     const [idx,setIdx]=useState(0);
     const day=days[idx]||days[0];
@@ -156,7 +145,7 @@
         d.checks={...(d.checks||{}), [id]: !d.checks?.[id]}; n[idx]=d; return n; });
     }
 
-    // Smart Coach (formatted list)
+    // Smart Coach (bullets)
     const [coach,setCoach]=useState(null);
     function runCoach(){
       const txt=(day.note||"").toLowerCase();
@@ -196,7 +185,7 @@
           )
         ),
         e("div",{className:"day-nav"},
-          e("button",{className:"btn",onClick:()=>changeDay(-1),"aria-label":"Prev day"},"◀"),
+          e("button",{className:"btn",onClick:()=>changeDay(-1),"aria-label":"Previous day"},"◀"),
           e("div",{className:"day-chip"}, e("div",{style:{fontWeight:800}},"Day ", day.day)),
           e("button",{className:"btn",onClick:()=>changeDay(1),"aria-label":"Next day"},"▶")
         )
@@ -247,7 +236,6 @@
     );
   }
 
-  /* ---------- Calendar with cleanse-day expansion ---------- */
   function Calendar({ days, recipes, settings }) {
     function dateFor(dayNum) {
       const dstr = settings.startDate || "";
@@ -257,7 +245,6 @@
       const dt = new Date(base.getTime() + (dayNum - 1) * 86400000);
       return dt.toLocaleDateString();
     }
-
     function expandCleanseDay(list, d) {
       if ((d.phase||"") !== "cleanse") return list;
       const byName = new Map(list.map(r => [r.name, r]));
@@ -305,7 +292,6 @@
     );
   }
 
-  /* ---------- Groceries / Photos / Settings ---------- */
   function Groceries({groceries,setGroceries}){
     return e("div",{className:"card"},
       e("h2",null,"Groceries & Prices"),
@@ -394,22 +380,6 @@
       setGroceries(aggregateGroceries(PLAN_RECIPES));
       alert("Default 11-day plan imported.");
     }
-    function importFromChatGPT(){
-      const txt = prompt("Paste ChatGPT plan (JSON or simple text).");
-      if(!txt) return;
-      try{
-        const plan=JSON.parse(txt);
-        if(!Array.isArray(plan.recipes)||!Array.isArray(plan.days)) throw 0;
-        setDays(plan.days); setRecipes(plan.recipes); setGroceries(aggregateGroceries(plan.recipes));
-        alert("Plan imported ✔");
-      }catch{
-        try{
-          const parsed=parseFreeTextPlan(txt);
-          setDays(parsed.days); setRecipes(parsed.recipes); setGroceries(aggregateGroceries(parsed.recipes));
-          alert("Plan imported ✔");
-        }catch{ alert("Could not parse. Try JSON if possible."); }
-      }
-    }
 
     return e("div",{className:"card"},
       e("h2",null,"Settings"),
@@ -419,10 +389,11 @@
           e("input",{type:"date",value:(settings.startDate||""), onChange:(ev)=> setSettings(prev=>({...prev,startDate:ev.target.value||null})) })
         ),
         e("div",null,
-          e("div",{style:{fontSize:12,marginBottom:4}},"Import plan"),
+          e("div",{style:{fontSize:12,marginBottom:4}},"Quick actions"),
           e("div",{className:"row"},
-            e("button",{className:"btn primary",onClick:importDefault},"Default 11-day"),
-            e("button",{className:"btn",onClick:importFromChatGPT},"From ChatGPT")
+            e("button",{className:"btn primary",onClick:importDefault},"Import default plan"),
+            e("button",{className:"btn",onClick:()=>alert('Use the ChatGPT import you had if needed.')},
+              "ChatGPT import")
           )
         )
       ),
@@ -457,7 +428,7 @@
     );
   }
 
-  /* ------------ Grocery aggregation (from recipes) ------------ */
+  /* Aggregation + utils */
   function aggregateGroceries(recipes){
     const map={};
     (recipes||[]).forEach(r=>{
@@ -474,25 +445,7 @@
     })).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
   }
 
-  /* ------------ Parse free-text plan (simple) ------------ */
-  function parseFreeTextPlan(text){
-    const days=defaultDays(); const recipes=[];
-    const lines=String(text||"").split(/\r?\n/);
-    let curDay=null, cur=null;
-    lines.forEach(raw=>{
-      const line=raw.trim();
-      const mDay=line.match(/^Day\s+(\d+)/i);
-      if(mDay){ curDay=+mDay[1]; return; }
-      const mJ=line.match(/^Juice\s*\d*\s*[-:]\s*(.+)$/i);
-      if(mJ && curDay){ cur={id:"r-"+Math.random().toString(36).slice(2), name=mJ[1], type:"juice", day:curDay, ingredients:[]}; recipes.push(cur); return; }
-      const mM=line.match(/^(Breakfast|Lunch|Dinner|Meal)\s*[-:]\s*(.+)$/i);
-      if(mM && curDay){ cur={id:"m-"+Math.random().toString(36).slice(2), name=mM[2], type:"meal", day:curDay, ingredients:[]}; recipes.push(cur); return; }
-      const ing=line.match(/^[•\-]\s*(.+)$/); if(ing && cur){ cur.ingredients.push({name:ing[1].replace(/^[\d/.\s]+\w*\s+/,""), qty:ing[1].match(/^([\d/.\s]+\w*)/i)?.[1]||""}); }
-    });
-    return {days,recipes};
-  }
-
-  /* ------------ App ------------ */
+  /* App */
   function App(){
     const [goals,setGoals]=useLocal("oz.goals", GOAL_LABELS);
     const [templates,setTemplates]=useLocal("oz.templates", DEFAULT_PHASE_TEMPLATES);
@@ -513,10 +466,12 @@
 
       e("nav",{className:"tabs"},
         [
-          {id:"dash",icon:"🏠"},{id:"groceries",icon:"🛒"},
-          {id:"calendar",icon:"📅"},{id:"photos",icon:"📷"},
-          {id:"settings",icon:"⚙️"}
-        ].map(t=> e("button",{key:t.id,className:"btn"+(tab===t.id?" primary":""),onClick:()=>setTab(t.id),"aria-label":t.id}, t.icon))
+          {id:"dash",icon:"🏠", label:"home"},
+          {id:"groceries",icon:"🛒", label:"groceries"},
+          {id:"calendar",icon:"📅", label:"calendar"},
+          {id:"photos",icon:"📷", label:"progress photos"},
+          {id:"settings",icon:"⚙️", label:"settings"}
+        ].map(t=> e("button",{key:t.id,className:"btn"+(tab===t.id?" primary":""),onClick:()=>setTab(t.id),"aria-label":t.label}, t.icon))
       )
     );
   }
