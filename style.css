@@ -37,7 +37,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .prog{height:10px;border-radius:9999px;background:#fde7e0;overflow:hidden}
 .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--glow),var(--accent));width:0;transition:width .35s ease}
 
-/* Mast (mobile-friendly, title + phase stack) */
+/* Mast (mobile-friendly) */
 .mast{display:flex;align-items:center;gap:12px;justify-content:space-between}
 .mast .left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .mast img{height:40px;width:40px;border-radius:50%;object-fit:cover;flex-shrink:0}
@@ -51,7 +51,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 /* Coach */
 .coachCard{border-radius:16px;background:linear-gradient(90deg,#ffe6f5,#f0e7ff);
   border:1px solid var(--line);padding:12px;cursor:pointer}
-.coachOut{margin-top:8px;border-radius:12px;border:1px dashed #f4c2de;padding:10px;background:#fffdf8}
+.coachOut{margin-top:8px;border-radius:12px;border:1px dashed #f4c2de;padding:10px;background:#fffdf8;white-space:pre-wrap}
 .noteArea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:14px;padding:12px;font-size:16px}
 
 /* Tabs (floating) */
