@@ -504,41 +504,51 @@ const PLAN_RECIPES = [
     );
   }
 
-  function Calendar({days,recipes,settings}){
-    function dateFor(dayNum){
-      const dstr=settings.startDate||"";
-      if(!dstr) return null;
-      const base=new Date(dstr+"T00:00:00");
-      if(isNaN(base)) return null;
-      const dt = new Date(base.getTime()+(dayNum-1)*86400000);
-      return dt.toLocaleDateString();
-    }
-    return e("div",{className:"card"},
-      e("h2",null,"Calendar"),
-      e("ul",{style:{listStyle:"none",padding:0}},
-        days.map(d=>{
-          const list=(recipes||[]).filter(r=>r.day===d.day);
-          const hasPhotos=(d.photos&&d.photos.length>0);
-          const hasNote=(d.note&&d.note.trim().length>0);
-          const dd=dateFor(d.day);
-          return e("li",{key:d.day, className:"card", style:{padding:"12px",marginTop:10}},
-            e("div",{className:"row",style:{justifyContent:"space-between"}},
-              e("div",null,
-                e("div",{style:{fontWeight:800}}, "Day ", d.day, " — ", d.phase.toUpperCase()),
-                dd && e("div",{className:"badge",style:{marginTop:6}}, dd)
-              ),
-              e("div",{className:"row",style:{minHeight:24}},
-                list.length? list.map(r=> e("span",{key:r.id,className:"badge"}, (r.type==="juice" ? "🧃 " : (r.type==="snack" ? "🍎 " : "🍽️ "))
-                          : e("span",{style:{fontSize:12,color:"var(--muted)"}}, "—"),
-                hasNote && e("span",{className:"badge"},"📝 Note"),
-                hasPhotos && e("span",{className:"badge"},"📸 Photos")
-              )
-            )
-          );
-        })
-      )
-    );
+ function Calendar({ days, recipes, settings }) {
+  function dateFor(dayNum) {
+    const dstr = settings.startDate || "";
+    if (!dstr) return null;
+    const base = new Date(dstr + "T00:00:00");
+    if (isNaN(base)) return null;
+    const dt = new Date(base.getTime() + (dayNum - 1) * 86400000);
+    return dt.toLocaleDateString();
   }
+
+  return e("div", { className: "card" },
+    e("h2", null, "Calendar"),
+    e("ul", { style: { listStyle: "none", padding: 0, margin: 0 } },
+      days.map(d => {
+        const list = (recipes || []).filter(r => r.day === d.day);
+        const hasPhotos = !!(d.photos && d.photos.length);
+        const hasNote = !!(d.note && d.note.trim().length);
+        const dd = dateFor(d.day);
+
+        return e("li", { key: d.day, className: "card", style: { padding: "12px", marginTop: 10 } },
+          e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
+            // Left: day + phase + optional date
+            e("div", null,
+              e("div", { style: { fontWeight: 800 } }, "Day ", d.day, " — ", (d.phase || "").toUpperCase()),
+              dd && e("div", { className: "badge", style: { marginTop: 6 } }, dd)
+            ),
+            // Right: recipes + note/photo badges
+            e("div", { className: "row", style: { minHeight: 24, flexWrap: "wrap", gap: 6 } },
+              list.length
+                ? list.map(r =>
+                    e("span", { key: r.id, className: "badge" },
+                      (r.type === "juice" ? "🧃 " : (r.type === "snack" ? "🍎 " : "🍽️ ")),
+                      r.name
+                    )
+                  )
+                : e("span", { style: { fontSize: 12, color: "var(--muted)" } }, "—"),
+              hasNote && e("span", { className: "badge" }, "📝 Note"),
+              hasPhotos && e("span", { className: "badge" }, "📸 Photos")
+            )
+          )
+        );
+      })
+    )
+  );
+}
 
   function Settings({settings,setSettings,goals,setGoals,templates,setTemplates,setDays,setRecipes,setGroceries}){
     const [show,setShow]=useState(false);
