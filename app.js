@@ -712,3 +712,5 @@ const PLAN_RECIPES = [
 
   ReactDOM.createRoot(document.getElementById("root")).render(e(App));
 })();
+// After your React app mounts:
+document.dispatchEvent(new Event('oz:ready'));
