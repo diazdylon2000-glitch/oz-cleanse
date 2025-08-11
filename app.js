@@ -1,23 +1,56 @@
-/* Oz Cleanse Companion — V14.5 (everything synced)
-   Patches in this build only:
-   - Calendar: ensure 4 juices per cleanse day (1 of each type)
-   - Smart Coach: render as bulleted list
-   - Splash: also hides on oz:ready; add small 100% affirmation toast
+/* Oz Cleanse Companion — V14.5 (safe bootstrap + your patches)
+   Fixes included earlier:
+   - Calendar: ensure 4 juices per cleanse day (1 of each) without dupes
+   - Smart Coach: clean bullet list
+   - Splash: hides on oz:ready; 100% toast affirmation
+   New: Safe bootstrap so page never blanks if CDNs are late/missing
 */
 
-(function(){
+/* === Early error catcher (must run even if React is missing) === */
+(function earlyErrorCatcher(){
+  window.addEventListener("error", (ev) => {
+    try {
+      const box = document.getElementById("errorBanner");
+      if (box) {
+        box.textContent = "Error: " + (ev.error?.message || ev.message || "Unknown");
+        box.style.display = "block";
+      }
+      const s = document.getElementById("ozSplash");
+      if (s) s.style.display = "grid"; // keep splash visible on error
+    } catch {}
+  });
+})();
+
+/* === Safe bootstrap: wait for CDN libs, then start === */
+(function bootstrap(){
+  const NEED = ["React","ReactDOM","Chart","confetti"];
+  const hasAll = () => NEED.every(k => window[k]);
+
+  let tries = 0, maxTries = 40; // ~4s @100ms
+  const tick = () => {
+    if (hasAll()) return startApp();
+    if (++tries >= maxTries) {
+      const box = document.getElementById("errorBanner");
+      if (box) {
+        box.textContent = "Error: Required libraries failed to load. Check network and script order for React/ReactDOM/Chart/confetti.";
+        box.style.display = "block";
+      }
+      const s = document.getElementById("ozSplash");
+      if (s) s.style.display = "grid";
+      return; // stop trying
+    }
+    setTimeout(tick, 100);
+  };
+
+  // start after DOM is ready so splash exists
+  if (document.readyState === "complete" || document.readyState === "interactive") tick();
+  else window.addEventListener("DOMContentLoaded", tick);
+})();
+
+/* === Your whole app lives inside startApp(), unchanged except where noted === */
+function startApp(){
   const e = React.createElement;
   const {useState,useEffect,useRef,useMemo} = React;
-
-  /* ----------------- Error Banner ----------------- */
-  window.addEventListener("error", (ev) => {
-    const box = document.getElementById("errorBanner");
-    if (!box) return;
-    box.textContent = "Error: " + (ev.error?.message || ev.message);
-    box.style.display = "block";
-    const s = document.getElementById("ozSplash");
-    if (s) s.style.display = "none";
-  });
 
   /* ----------------- Helpers ----------------- */
   function useLocal(key, initial) {
@@ -30,7 +63,7 @@
   }
   function vibrate(ms=12){ try{ navigator.vibrate && navigator.vibrate(ms) }catch{} }
 
-  // tiny toast used for 100% day affirmation
+  // tiny toast for 100% day
   function toast(msg = "100% day — you crushed it!") {
     try {
       const node = document.createElement('div');
@@ -65,9 +98,7 @@
   }
 
   /* ------------ Plan recipes (juices + rebuild meals) ------------ */
-  // --- Rebuild-ready default plan (juices + meals + snacks) ---
   const PLAN_RECIPES = [
-    // CLEANSE JUICES (same as before)
     { id:"r-melon",  name:"Melon Mint Morning", type:"juice", day:4, servings:1,
       ingredients:[{name:"Melon",qty:"1"},{name:"Mint",qty:"1/2 cup"},{name:"Lime",qty:"1"}]
     },
@@ -81,108 +112,54 @@
       ingredients:[{name:"Grapes",qty:"3 cup"},{name:"Romaine",qty:"3 cup"},{name:"Cucumbers",qty:"2"},{name:"Lemon",qty:"1"}]
     },
 
-    // ===================== REBUILD — Day 8 & 9 (Phase "rebuild") =====================
+    // rebuild days...
     { id:"r-smoothie-8", name:"Smoothie Breakfast", type:"meal", day:8,
-      ingredients:[
-        {name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"},
-        {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}
-      ]
+      ingredients:[{name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}]
     },
     { id:"r-smoothie-9", name:"Smoothie Breakfast", type:"meal", day:9,
-      ingredients:[
-        {name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"},
-        {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}
-      ]
+      ingredients:[{name:"Banana",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Almond milk",qty:"1 cup"}, {name:"Chia seeds",qty:"1 tbsp"}]
     },
-
     { id:"r-steamveg-8", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:8,
-      ingredients:[
-        {name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"},
-        {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"},
-        {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}
-      ]
+      ingredients:[{name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"}, {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}]
     },
     { id:"r-steamveg-9", name:"Steamed Veg + Olive Oil & Lemon", type:"meal", day:9,
-      ingredients:[
-        {name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"},
-        {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"},
-        {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}
-      ]
+      ingredients:[{name:"Zucchini",qty:"1"}, {name:"Carrots",qty:"1 cup"}, {name:"Cucumber",qty:"1"}, {name:"Spinach",qty:"2 cup"}, {name:"Olive oil",qty:"1 tbsp"}, {name:"Lemon",qty:"1"}]
     },
-
     { id:"r-lentil-8", name:"Lentil Soup", type:"meal", day:8,
-      ingredients:[
-        {name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},
-        {name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},
-        {name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}
-      ]
+      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}]
     },
     { id:"r-lentil-9", name:"Lentil Soup", type:"meal", day:9,
-      ingredients:[
-        {name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},
-        {name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},
-        {name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}
-      ]
+      ingredients:[{name:"Lentils",qty:"1/2 cup"},{name:"Carrots",qty:"1/2 cup"},{name:"Celery",qty:"1/2 cup"},{name:"Parsley",qty:"1/4 cup"},{name:"Onion",qty:"1/2"},{name:"Water",qty:"4 cup"}]
     },
-
     { id:"s-snacks-8", type:"snack", day:8, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
-      ingredients:[
-        {name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"},
-        {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}
-      ]
+      ingredients:[{name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"}, {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}]
     },
     { id:"s-snacks-9", type:"snack", day:9, name:"Snacks — Fruit, Coconut Yogurt, Chia Pudding",
-      ingredients:[
-        {name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"},
-        {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}
-      ]
+      ingredients:[{name:"Melon",qty:"1"}, {name:"Grapes",qty:"2 cup"}, {name:"Peaches",qty:"3"}, {name:"Coconut yogurt",qty:"2 cup"}, {name:"Chia seeds",qty:"3 tbsp"}, {name:"Almond milk",qty:"1 cup"}]
     },
-
-    // ===================== REBUILD — Day 10 & 11 =====================
     { id:"r-oats-10", name:"Overnight Oats Breakfast", type:"meal", day:10,
-      ingredients:[
-        {name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},
-        {name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}
-      ]
+      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}]
     },
     { id:"r-oats-11", name:"Overnight Oats Breakfast", type:"meal", day:11,
-      ingredients:[
-        {name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},
-        {name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}
-      ]
+      ingredients:[{name:"Rolled oats",qty:"1/2 cup"},{name:"Almond milk",qty:"1 cup"},{name:"Berries",qty:"1/2 cup"},{name:"Cinnamon",qty:"1/2 tsp"}]
     },
-
     { id:"r-quinoa-10", name:"Quinoa Salad", type:"meal", day:10,
-      ingredients:[
-        {name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
-        {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}
-      ]
+      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},{name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
     },
     { id:"r-quinoa-11", name:"Quinoa Salad", type:"meal", day:11,
-      ingredients:[
-        {name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},
-        {name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}
-      ]
+      ingredients:[{name:"Quinoa",qty:"1/2 cup"},{name:"Cucumber",qty:"1"},{name:"Tomato",qty:"1"},{name:"Parsley",qty:"1/4 cup"},{name:"Olive oil",qty:"1 tbsp"},{name:"Lemon",qty:"1"}]
     },
-
     { id:"r-protein-10", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:10,
       ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
     },
     { id:"r-protein-11", name:"Baked Salmon or Grilled Chicken + Steamed Broccoli", type:"meal", day:11,
       ingredients:[{name:"Salmon/Chicken",qty:"12 oz"},{name:"Broccoli",qty:"2 heads"}]
     },
-
     { id:"s-snacks-10", type:"snack", day:10, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
-      ingredients:[
-        {name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},
-        {name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}
-      ]
+      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}]
     },
     { id:"s-snacks-11", type:"snack", day:11, name:"Snacks — Raw Veg + Hummus, Fresh Fruit",
-      ingredients:[
-        {name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},
-        {name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}
-      ]
+      ingredients:[{name:"Carrots",qty:"2"},{name:"Cucumber",qty:"1"},{name:"Celery",qty:"2 stalks"},{name:"Hummus",qty:"1/2 cup"},{name:"Apples",qty:"2"},{name:"Grapes",qty:"2 cup"}]
     }
   ];
 
@@ -213,7 +190,7 @@
     const num = m[1].includes("/")
       ? m[1].split(" ").reduce((a,b)=> b.includes("/") ? a + (parseFloat(b.split("/")[0]) / parseFloat(b.split("/")[1])) : a + parseFloat(b), 0)
       : parseFloat(m[1]);
-    const unit = (m[3]||"").replace(/"/g,"in"); // treat 1" ginger as unknown unit
+    const unit = (m[3]||"").replace(/"/g,"in");
     return {n:num, u:unit};
   }
   function toCup(q){
@@ -223,7 +200,7 @@
     if(u==="tbsp")return {n:q.n/16,u:"cup"};
     if(u==="oz")  return {n:q.n/8,u:"cup"};
     if(u===""||u==="cup")return {n:q.n,u:"cup"};
-    return {n:q.n,u:u}; // unknown; passthrough
+    return {n:q.n,u:u};
   }
   function fromCup(n,u){
     if(u!=="cup") return (Number.isInteger(n)?n:n.toFixed(2))+" "+u;
@@ -261,7 +238,6 @@
     }
 
     window.addEventListener("load", () => { setTimeout(hide, 1200); });
-    // also hide as soon as app signals it's ready
     document.addEventListener("oz:ready", hide);
   })();
 
@@ -282,7 +258,7 @@
     const cleanseDays = (days||[]).filter(d=>d.phase==='cleanse').map(d=>d.day);
     cleanseDays.forEach(dayNum=>{
       const existing = out.filter(r=>r.day===dayNum && r.type==='juice');
-      if (existing.length >= 4) return; // full already
+      if (existing.length >= 4) return;
       const needed = 4 - existing.length;
       for(let i=0;i<needed;i++){
         const tmpl = CLEANSE_TEMPLATE[i % CLEANSE_TEMPLATE.length];
@@ -345,7 +321,7 @@
       if(Math.round(progress)===100){
         try{ confetti({ particleCount:160, spread:72, ticks:240, scalar:1.1, origin:{y:.7} }); }catch{}
         vibrate(25);
-        toast(); // affirmation
+        toast();
       }
     },[progress]);
 
@@ -384,14 +360,12 @@
       const body = picked.length ? "Try:\n• " + picked.join("\n• ") : "Hydrate, 5 slow breaths, short walk, then reassess.";
       setCoachText(`${header}\n\n${body}\n\n${boost}`);
     }
-
-    // show coach as a tidy list
     const coachLines = useMemo(() => String(coachText||"").split(/\r?\n+/).filter(Boolean), [coachText]);
 
     // Upcoming 2-day ingredients (combined)
     function nextTwoDayIngredients(current){
       function gatherFor(daysWanted){
-        const bag={}; // name -> {qtyList:[], days:Set}
+        const bag={};
         (recipes||[]).forEach(r=>{
           if(!r.day || !daysWanted.has(r.day)) return;
           (r.ingredients||[]).forEach(it=>{
@@ -408,7 +382,6 @@
       const d1=current.day, d2=current.day+1;
       let list = gatherFor(new Set([d1,d2]));
       if(list.length) return {items:list, label:`Today + Tomorrow — Ingredients`};
-      // fallback: next two recipe days
       const futureDays=[...new Set((recipes||[]).filter(r=>r.day>=current.day).map(r=>r.day))].sort((a,b)=>a-b).slice(0,2);
       list=gatherFor(new Set(futureDays));
       const label = futureDays.length===2 ? `Upcoming Ingredients — Day ${futureDays[0]} & ${futureDays[1]}` :
@@ -424,7 +397,7 @@
         e("div",{className:"left"},
           e("img",{src:"oz.png",alt:"Oz"}),
           e("div",null,
-            <h1 style={{ whiteSpace: 'nowrap' }}>Oz Companion</h1>
+            e("h1",{style:{whiteSpace:'nowrap'}}, "Oz Companion"),
             e("div",{className:"phase"}, day.phase.toUpperCase())
           )
         ),
@@ -567,13 +540,11 @@
           const dd = dateFor(d.day);
 
           return e("li", { key: d.day, className: "card", style: { padding: "12px", marginTop: 10 } },
-            e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
-              // Left: day + phase + optional date
+          e("div", { className: "row", style: { justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
               e("div", null,
                 e("div", { style: { fontWeight: 800 } }, "Day ", d.day, " — ", (d.phase || "").toUpperCase()),
                 dd && e("div", { className: "badge", style: { marginTop: 6 } }, dd)
               ),
-              // Right: recipes + note/photo badges
               e("div", { className: "row", style: { minHeight: 24, flexWrap: "wrap", gap: 6 } },
                 list.length
                   ? list.map(r =>
@@ -737,9 +708,8 @@
 
     // ensure cleanse days always show 4 juices/day
     useEffect(()=>{
-      const expanded = expandCleanseForDays(recipes, days);
-      if (expanded.length !== recipes.length) setRecipes(expanded);
-    },[days, recipes, setRecipes]);
+      setRecipes(prev => expandCleanseForDays(prev, days));
+    },[days,setRecipes]);
 
     useEffect(()=>{ // ensure grocery list follows recipes
       setGroceries(aggregateGroceries(recipes));
@@ -759,7 +729,19 @@
     );
   }
 
-  ReactDOM.createRoot(document.getElementById("root")).render(e(App));
-})();
-// After your React app mounts:
-document.dispatchEvent(new Event('oz:ready'));
+  // Mount
+  try {
+    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  } catch (err) {
+    const box = document.getElementById("errorBanner");
+    if (box) {
+      box.textContent = "Mount error: " + (err?.message || err);
+      box.style.display = "block";
+    }
+    const s = document.getElementById("ozSplash"); if (s) s.style.display = "grid";
+    throw err;
+  }
+
+  // Signal splash to hide if still up
+  document.dispatchEvent(new Event('oz:ready'));
+}
