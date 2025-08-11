@@ -369,55 +369,194 @@
     );
   };
 
-  const Settings = ({ templates, setTemplates, goals, setGoals }) => {
-    const [showModal, setShowModal] = useState(false);
-    const [phase, setPhase] = useState("fast");
-    const [checked, setChecked] = useState({});
+ /* ===================== Settings (start date + imports + phase editors) ===================== */
+/* EXPECTED PROPS:
+   - templates: object like { fast:[ids], cleanse:[ids], rebuild:[ids], __startDate?: "YYYY-MM-DD" }
+   - onChange(nextTemplates): setSettings({ phaseTemplates: nextTemplates })
+   - onImportPlan(): imports default plan
+   - onImportText(): imports plan from ChatGPT text
+   - goals: { [id]: "label shown" }
+   - setGoals(fn): updater for goals map
+*/
 
-    useEffect(() => {
-      // ensure current modal picks up template
-      const sel = new Set(templates[phase] || []);
-      const initial = Object.keys(goals).reduce((m, id) => (m[id] = sel.has(id), m), {});
-      setChecked(initial);
-    }, [phase, templates, goals]);
+function Settings({ templates, onChange, onImportPlan, onImportText, goals, setGoals }) {
+  const [local, setLocal] = React.useState(templates);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [editPhase, setEditPhase] = React.useState(null); // "fast" | "cleanse" | "rebuild"
+  const [phaseChecked, setPhaseChecked] = React.useState({}); // {id:boolean} for modal
+  const [newItemText, setNewItemText] = React.useState("");
 
-    function openModal(ph){ setPhase(ph); setShowModal(true); }
-    function saveModal(){
-      const nextIds = Object.keys(checked).filter(id => checked[id]);
-      const next = Object.assign({}, templates); next[phase] = nextIds;
-      setTemplates(next); setShowModal(false);
+  React.useEffect(() => { setLocal(templates); }, [templates]);
+
+  function openPhaseModal(phase) {
+    const sel = new Set((local[phase] || []));
+    const snap = Object.keys(goals).reduce((m, id) => { m[id] = sel.has(id); return m; }, {});
+    setPhaseChecked(snap);
+    setEditPhase(phase);
+    setModalOpen(true);
+  }
+
+  function savePhaseModal() {
+    const chosen = Object.keys(phaseChecked).filter(id => phaseChecked[id]);
+    const next = { ...local, [editPhase]: chosen };
+    setLocal(next);
+    onChange(next);
+    setModalOpen(false);
+  }
+
+  function togglePhaseItem(id) {
+    setPhaseChecked(prev => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function slugifyId(label) {
+    return String(label || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .slice(0, 48) || "item-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function handleAddItem(ev) {
+    ev.preventDefault();
+    const label = newItemText.trim();
+    if (!label) return;
+    const id = slugifyId(label);
+    if (goals[id]) {
+      alert("That item already exists.");
+      return;
     }
-    function toggleGoal(id){ setChecked(prev => Object.assign({}, prev, { [id]: !prev[id] })); }
-    function createGoal(){
-      const idRaw = prompt("New goal ID (letters, dashes). Example: meditation");
-      if(!idRaw) return;
-      const id = idRaw.toLowerCase().trim().replace(/[^a-z0-9\-]/g,'');
-      if(!id) return alert("Invalid ID.");
-      if(goals[id]) return alert("That ID already exists.");
-      const label = prompt("Label to show (e.g., 🧘 Meditation 10 min)");
-      if(!label) return;
-      setGoals(Object.assign({}, goals, { [id]:label }));
-      setChecked(prev => Object.assign({}, prev, { [id]: true }));
-    }
+    setGoals(prev => ({ ...prev, [id]: label }));
+    setNewItemText("");
+    // If a modal is open, auto-check newly added item for convenience
+    if (modalOpen) setPhaseChecked(prev => ({ ...prev, [id]: true }));
+  }
 
-    return e("div", { className:"wrap" },
-      e("h1", null, "Settings"),
-      e("div", { className:"card" },
-        e("h2", null, "Phase Templates"),
-        e("p", { style:{ color:"#64748b", margin:"6px 0 12px" } }, "Choose which checklist items appear by default in each phase. Add your own with “+ New Goal”."),
-        ["fast","cleanse","rebuild"].map(ph =>
-          e("div", { key:ph, style:{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:8 } },
-            e("div", null,
-              e("b", null, ph.toUpperCase()), " — ",
-              (templates[ph]||[]).map(id => e("span", { key:id, className:"badge", style:{ marginRight:6 } }, goals[id]||id))
-            ),
-            e("div", null,
-              e("button", { className:"btn", onClick:()=>openModal(ph) }, "Edit"),
-              e("button", { className:"btn", style:{ marginLeft:8 }, onClick:createGoal }, "+ New Goal")
-            )
-          )
+  function setStartDate(dstr) {
+    const next = { ...local, __startDate: (dstr || null) };
+    setLocal(next);
+    onChange(next);
+  }
+
+  return React.createElement("div", { className: "wrap" },
+    React.createElement("h1", null, "Settings"),
+
+    // Row: Start date + imports
+    React.createElement("div", { className: "card", style: { marginBottom: 12 } },
+      React.createElement("div", { style: { display: "grid", gap: 12 } },
+
+        // Start date
+        React.createElement("div", { style: { display: "grid", gap: 6 } },
+          React.createElement("label", { style: { fontSize: 12, color: "#64748b" } }, "Start date for this 11-day plan"),
+          React.createElement("input", {
+            type: "date",
+            value: local.__startDate || "",
+            onChange: (ev) => setStartDate(ev.target.value),
+            style: {
+              maxWidth: 220, padding: "10px 12px", border: "1px solid var(--line)",
+              borderRadius: 12, fontSize: 16
+            }
+          })
+        ),
+
+        // Imports
+        React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+          React.createElement("button", { className: "btn", onClick: onImportPlan }, "Import default meal plan"),
+          React.createElement("button", { className: "btn", onClick: onImportText }, "Import plan from ChatGPT")
         )
+      )
+    ),
+
+    // Row: the three phases—each only shows an Edit button
+    React.createElement("div", { className: "card" },
+      React.createElement("h2", null, "Checklist by phase"),
+      React.createElement("p", { style: { color: "#64748b", margin: "6px 0 12px" } },
+        "Tap Edit to choose which checklist items appear during each phase."
       ),
+      ["fast", "cleanse", "rebuild"].map((ph) =>
+        React.createElement("div", {
+          key: ph,
+          style: {
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 0", borderBottom: "1px solid var(--line)"
+          }
+        },
+          React.createElement("div", null,
+            React.createElement("b", null,
+              ph.charAt(0).toUpperCase() + ph.slice(1)
+            ),
+            local[ph] && local[ph].length
+              ? React.createElement("span", { className: "badge", style: { marginLeft: 8 } },
+                  local[ph].length, " items")
+              : React.createElement("span", { style: { marginLeft: 8, color: "#64748b", fontSize: 12 } }, "no items")
+          ),
+          React.createElement("button", { className: "btn", onClick: () => openPhaseModal(ph) }, "Edit")
+        )
+      )
+    ),
+
+    // Row: single global add box
+    React.createElement("div", { className: "card" },
+      React.createElement("h2", null, "Add a new checklist item"),
+      React.createElement("form", { onSubmit: handleAddItem, style: { display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" } },
+        React.createElement("input", {
+          type: "text",
+          value: newItemText,
+          onChange: (ev) => setNewItemText(ev.target.value),
+          placeholder: "e.g., 🧘 10-min meditation",
+          style: {
+            flex: "1 1 280px", minWidth: 260, padding: "10px 12px",
+            border: "1px solid var(--line)", borderRadius: 12, fontSize: 16
+          }
+        }),
+        React.createElement("button", { type: "submit", className: "btn peach" }, "Add")
+      ),
+      // small tip
+      React.createElement("p", { style: { color: "#64748b", marginTop: 8, fontSize: 12 } },
+        "New items become available in the phase editors. Toggle them on for Fast, Cleanse, or Rebuild."
+      )
+    ),
+
+    // Modal (phase editor)
+    modalOpen && React.createElement("div", {
+      className: "modal", onClick: (ev) => { if (ev.target.classList.contains("modal")) setModalOpen(false); }
+    },
+      React.createElement("div", { className: "sheet" },
+        React.createElement("h2", null, "Edit — ",
+          editPhase ? editPhase.charAt(0).toUpperCase() + editPhase.slice(1) : ""
+        ),
+        React.createElement("div", {
+          style: { maxHeight: "48vh", overflow: "auto", margin: "8px 0 12px" }
+        },
+          Object.keys(goals).length === 0
+            ? React.createElement("div", { style: { color: "#64748b" } }, "No checklist items yet. Add one, then return here.")
+            : Object.keys(goals).map((id) =>
+                React.createElement("label", {
+                  key: id,
+                  style: {
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 6px", borderBottom: "1px solid var(--line)"
+                  }
+                },
+                  React.createElement("input", {
+                    type: "checkbox",
+                    checked: !!phaseChecked[id],
+                    onChange: () => togglePhaseItem(id)
+                  }),
+                  React.createElement("span", null, goals[id])
+                )
+              )
+        ),
+        React.createElement("div", {
+          style: { display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }
+        },
+          React.createElement("button", { className: "btn", onClick: () => setModalOpen(false) }, "Cancel"),
+          React.createElement("button", { className: "btn primary", onClick: savePhaseModal }, "Save")
+        )
+      )
+    )
+  );
+}
 
       // Modal
       e("div", { className:"modal"+(showModal?" show":""), onClick:(ev)=>{ if(ev.target.classList.contains("modal")) setShowModal(false); } },
